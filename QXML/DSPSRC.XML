@@ -1,0 +1,4037 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+     <!-- Embedded DTD for validation -->
+     <!DOCTYPE upload [
+     <!ELEMENT compile (#PCDATA)>
+     <!ATTLIST compile
+      condition CDATA #REQUIRED
+     >
+     <!ELEMENT copysrc (#PCDATA)>
+     <!ELEMENT install_instructions (#PCDATA)>
+     <!ELEMENT install_program (#PCDATA)>
+     <!ELEMENT mbr (copysrc)>
+     <!ATTLIST mbr
+      mbrname CDATA #REQUIRED
+      mbrtype CDATA #REQUIRED
+      mbrtext CDATA #REQUIRED
+      srcfile CDATA #REQUIRED
+      srclib CDATA #REQUIRED
+      srclen CDATA #REQUIRED
+      srccssid CDATA #REQUIRED
+     >
+     <!ELEMENT qcmdexc (#PCDATA)>
+     <!ATTLIST qcmdexc
+      condition CDATA #REQUIRED
+      release CDATA #REQUIRED
+      dltsplf CDATA #REQUIRED
+     >
+     <!ELEMENT qrycond (#PCDATA)>
+     <!ATTLIST qrycond
+      msg CDATA #REQUIRED
+      values CDATA #REQUIRED
+      var CDATA #REQUIRED
+     >
+     <!ELEMENT sendmsg (#PCDATA)>
+     <!ATTLIST sendmsg
+      sendmsgid CDATA #REQUIRED
+      sendmsgtype CDATA #REQUIRED
+     >
+     <!ELEMENT rtvobjd (#PCDATA)>
+     <!ATTLIST rtvobjd
+      condition CDATA #REQUIRED
+      obj CDATA #REQUIRED
+      lib CDATA #REQUIRED
+      objtype CDATA #REQUIRED
+      rtnlib CDATA #IMPLIED
+     >
+     <!ELEMENT upload (install_instructions | install_program | qrycond |
+                       qcmdexc | sendmsg | mbr | compile | rtvobjd | chgvar)+>
+     <!ATTLIST upload
+      appname CDATA #REQUIRED
+      appauthor CDATA #REQUIRED
+      appblddate CDATA #REQUIRED
+     >
+     ]>
+<upload  appname="DSPSRC"  appauthor="Thomas Raddatz"  appblddate=" 2/08/2019">
+<install_instructions><![CDATA[
+     *----------------------------------------------------------------      ------
+     *  1. Upload entire XML to your AS/400 to a source file 112 long, into any mbr
+     *     name not in this XML (suggest member name like ABCX or XYZX). The source
+     *     file must be in the library where source and objects are to be installed.
+     *
+     *  2. If you have XMLPREVIEW installed, skip to step 3.
+     *
+     *     Copy the text between the start tag <install_program> and the end
+     *     tag </install_program> into any member name (your choice)
+     *     in file QRPGLESRC member type RPGLE.   CRTBNDRPG to compile.
+     *     NOTE: You need extract the install program only once, this same program
+     *           will install any upload on this page.
+     *
+     *  3. Call the install program (or execute XmlPrevew) passing these 3 parms.
+     *       'your-member-name you uploaded this text into'
+     *       'your-source-file-name the member is in'
+     *       'your-library-name the source file is in'
+     *
+     *  The various source members will be extracted and the objects required
+     *   for the application will be created in your-library-name.
+     *----------------------------------------------------------------      ------
+]]>  </install_instructions>
+<install_program><![CDATA[
+      * /// START OF INSTALL PGM HERE   ************************** ///
+      *---------------------------------------------------------------------------------------
+      * CRTBNDRPG PGM(QTEMP/XMLINST) SRCFILE(ISPHERE/QBUILD) SRCMBR(*PGM)
+      *---------------------------------------------------------------------------------------
+      * Parse / Install from xml text into source members and objects.
+      * Copyright (C) 2001    Craig Rutledge    <craig_rutledge@mohawkind.com>
+      * Martin Rowe    <Martin@dbg400.net>          scripting cmd prompts
+      * David George   <webmaster@400times.co.uk>   intellectual input
+      * Thomas Raddatz <thomas.raddatz@tools400.de> execute SQL statements
+      * Thomas Raddatz <thomas.raddatz@tools400.de> conditions
+      * Thomas Raddatz <thomas.raddatz@tools400.de> release
+      * Thomas Raddatz <thomas.raddatz@tools400.de> retrieve object description
+      *
+      * Use xml tags in text to trigger:
+      * 1. Parse text into source members (create srcfile & member if required).
+      * 2. Compile source into objects.
+      * 3. Send installation progress user messages.
+      * 4. Execute qcmdexc as required.
+      * 5. Execute SQL statements as required.
+      *
+      * This program is free software, you can redistribute it and/or modify it
+      * under the terms of the GNU General Public License as published by
+      * the Free Software Foundation.  See GNU General Public License for details
+      *---------------------------------------------------------------------------------------
+      * >>PRE-COMPILER<<
+      *   >>CRTCMD<< CRTBNDRPG    PGM(&LI/&OB) SRCFILE(&SL/&SF) SRCMBR(*PGM) +
+      *                           DBGVIEW(*LIST) OPTION(*EVENTF);
+      *   >>EXECUTE<<
+      * >>END-PRE-COMPILER<<
+      *---------------------------------------------------------------------------------------
+     H DFTACTGRP(*NO) ACTGRP(*CALLER) BNDDIR('QC2LE')
+      *---------------------------------------------------------------------------------------
+     Fxmlinput  if   f  112        disk    usropn                               uploaded text
+     Fqxxxsrc   o    f  112        disk    usropn                               parsed out
+      *--------------------------------------------------------------------
+      * create parm prototypes
+      *--------------------------------------------------------------------
+      *  Tokenize String
+     D strtok          PR              *          extproc('strtok')
+     D  i_string                       *   value  options(*string)
+     D  i_token                        *   value  options(*string)
+      * retrieve member description
+     D qusrmbrd        PR                  ExtPgm('QUSRMBRD')                   MEMBER DESCRIPTION
+     D  o_rcvVar                  32767a          options(*varsize)             RECEIVER
+     D  i_lenRcvVar                  10i 0 const                                LENGTH OF RECVR
+     D  i_format                      8    const                                UPLOAD TYPE
+     D  i_qFile                      20    const                                FILE   LIB
+     D  i_mbr                        10    const                                MEMBER NAME
+     D  i_ovverride                   1    const                                PROCESS OVERIDE
+     D  io_errCode                32767a          options(*varsize)             ERROR CODE
+      * retrieve object description
+     D QUSROBJD...
+     D                 PR                         extpgm('QUSROBJD')
+     D  o_rcvVar                  65535A          options(*varsize)
+     D  i_lenRcvVar                  10I 0 const
+     D  i_format                      8A   const
+     D  i_qObj                       20A   const
+     D  i_type                       10A   const
+     D  io_errCode                65535A          options(*nopass: *varsize)    | OptGrp 1
+      * send program message
+     D qmhsndpm        PR                  ExtPgm('QMHSNDPM')                   SEND MESSAGES
+     D  i_msgID                       7a   const                                ID
+     D  i_qMsgF                      20a   const                                FILE
+     D  i_msgText                 32767a   const  options(*varsize)             TEXT
+     D  i_lenMsgText                 10i 0 const                                LENGTH
+     D  i_msgType                    10a   const                                TYPE
+     D  i_callStackE                 10a   const                                STACK ENTRY
+     D  i_callStackC                 10i 0 const                                STACK COUNTER
+     D  i_msgKey                      4a   const                                KEY
+     D  io_errCode                32767a          options(*varsize)             ERROR CODE
+      * execute cl command
+     D  qcmdexc        PR                  ExtPgm('QCMDEXC')
+     D  i_cmd                        50a   Const
+     D  i_lenCmd                     15p 5 Const
+      *  Allocate Environment Handle
+     D SQLAllocEnv...
+     D                 PR                         extproc('SQLAllocEnv')
+     D                                     like(SQLRETURN_t )
+     D  o_phenv                        *   value
+      *  Allocate Connection Handle
+     D SQLAllocConnect...
+     D                 PR                         extproc('SQLAllocConnect')
+     D                                     like(SQLRETURN_t )
+     D  i_henv                             value  like(SQLHENV_t   )
+     D  o_phdbc                        *   value
+      *  Connect to a Data Source
+     D SQLConnect...
+     D                 PR                         extproc('SQLConnect')
+     D                                     like(SQLRETURN_t )
+     D  i_hdbc                             value  like(SQLHDBC_t   )
+     D  i_szDSN                        *   value  options(*string)
+     D  i_cbDSN                            value  like(SQLSMALLINT_t)
+     D  i_szUID                        *   value  options(*string)
+     D  i_cbUID                            value  like(SQLSMALLINT_t)
+     D  i_szAuthStr                    *   value  options(*string)
+     D  i_cbAuthStr                        value  like(SQLSMALLINT_t)
+      *  Set Connection Option
+     D SQLSetConnectOption...
+     D                 PR                         extproc('SQLSetConnectOption')
+     D                                     like(SQLRETURN_t )
+     D  i_hdbc                             value  like(SQLHDBC_t   )
+     D  i_fOption                          value  like(SQLSMALLINT_t)
+     D  i_vParam                           value  like(SQLPOINTER_t )
+      *  Allocate a Statement Handle
+     D SQLAllocStmt...
+     D                 PR                         extproc('SQLAllocStmt')
+     D                                     like(SQLRETURN_t )
+     D  i_hdbc                             value  like(SQLHDBC_t   )
+     D  o_phstmt                       *   value
+      *  Execute a Statement Directly
+     D SQLExecDirect...
+     D                 PR                         extproc('SQLExecDirect')
+     D                                     like(SQLRETURN_t )
+     D  i_hstmt                            value  like(SQLHSTMT_t  )
+     D  i_szSqlStr                     *   value  options(*string)
+     D  i_cbSqlStr                         value  like(SQLINTEGER_t)
+      *  Free (or Reset) a Statement Handle
+     D SQLFreeStmt...
+     D                 PR                         extproc('SQLFreeStmt')
+     D                                     like(SQLRETURN_t )
+     D  i_hstmt                            value  like(SQLHSTMT_t  )
+     D  i_fOption                          value  like(SQLSMALLINT_t)
+      *  Disconnect from a Data Source
+     D SQLDisconnect...
+     D                 PR                         extproc('SQLDisconnect')
+     D                                     like(SQLRETURN_t )
+     D  i_hdbc                             value  like(SQLHDBC_t   )
+      *  Free Connection Handle
+     D SQLFreeConnect...
+     D                 PR                         extproc('SQLFreeConnect')
+     D                                     like(SQLRETURN_t )
+     D  i_hdbc                             value  like(SQLHDBC_t   )
+      *  Free Environment Handle
+     D SQLFreeEnv...
+     D                 PR                         extproc('SQLFreeEnv')
+     D                                     like(SQLRETURN_t )
+     D  i_henv                             value  like(SQLHENV_t   )
+      *--------------------------------------------------------------------
+     D long_t          S             10I 0                    based(pDummy)
+     D short_t         S              5I 0                    based(pDummy)
+      *
+     D SQLINTEGER_t    S                   like(long_t      ) based(pDummy)
+     D SQLSMALLINT_t   S                   like(short_t     ) based(pDummy)
+      *
+     D PTR_t           S               *                      based(pDummy)
+     D SQLPOINTER_t    S                   like(PTR_t       ) based(pDummy)
+     D HENV_t          S                   like(long_t      ) based(pDummy)
+     D HDBC_t          S                   like(long_t      ) based(pDummy)
+     D HSTMT_t         S                   like(long_t      ) based(pDummy)
+     D RETCODE_t       S                   like(SQLINTEGER_t) based(pDummy)
+      *
+     D SQLHENV_t       S                   like(HENV_t      ) based(pDummy)
+     D SQLHDBC_t       S                   like(HDBC_t      ) based(pDummy)
+     D SQLHSTMT_t      S                   like(HSTMT_t     ) based(pDummy)
+     D SQLRETURN_t     S                   like(RETCODE_t   ) based(pDummy)
+      *
+     D retCode         S                   like(SQLRETURN_t) inz
+     D hdbc            S                   like(SQLHDBC_t  ) inz
+     D hstmt           S                   like(SQLHSTMT_t ) inz
+     D henv            S                   like(SQLHENV_t  ) inz
+     D sqlInit         S              1A                     inz(*off)
+     D cOptVal         S             10I 0                   inz
+      *
+     D SQL_NTS         C                   const( -3)
+     D SQL_COMMIT_NONE...
+     D                 C                   const(  1)
+     D SQL_ATTR_COMMIT...
+     D                 C                   const(  0)
+     D SQL_DROP        C                   const(  1)
+      *--------------------------------------------------------------------
+      * Read element
+      *--------------------------------------------------------------------
+     D readElement     PR                        like(bldexc)
+     D  i_element                     9A   value varying
+      *--------------------------------------------------------------------
+      * Define function prototype to double quotes in a string
+      *--------------------------------------------------------------------
+     D dblQuotes       PR          2048A         varying
+     D  i_string                   2048A   value varying
+      *--------------------------------------------------------------------
+      * Define function prototype to get attribute data from a string
+      *--------------------------------------------------------------------
+     D getAttrData...
+     D                 PR          2000A          varying                       like(string_t)
+     D  i_attr                       10a   value
+     D  i_string                   2000A   value  varying                       like(string_t)
+     D  i_default                  2000A   value  varying                       like(string_t)
+      *--------------------------------------------------------------------
+      * Define function prototype to check for a condition
+      *--------------------------------------------------------------------
+     D isCondition...
+     D                 PR              n
+     D  i_condList                 2000A   value
+      *---------------------------------------------------------------------------------------
+     D loadConditions...
+     D                 PR                  dim(32) like(condition)
+     D  i_conditions                128A   value
+      *--------------------------------------------------------------------
+     D getCurrentRelease...
+     D                 PR            10A
+      *--------------------------------------------------------------------
+     D isRelease...
+     D                 PR              n
+     D  i_os_release                  6A   value
+     D  i_release                    10A   value
+      *--------------------------------------------------------------------
+     D setTargetRelease...
+     D                 PR          2000A          varying
+     D  i_keyword                    10A   value  varying
+     D  i_string                   2000A   value  varying
+     D  i_value                      10A   value  varying
+      *--------------------------------------------------------------------
+     D setVariable...
+     D                 PR
+     D  i_fldName                    10A   value  varying
+     D  i_value                      64A   value  varying
+      *---------------------------------------------------------------------------------------------
+     D getVarName...
+     D                 PR            11a          varying
+     D  i_bldexc                           value  like(bldexc)
+     D  i_pos                        10i 0 value
+      *---------------------------------------------------------------------------------------------
+     D getVarValue...
+     D                 PR            64a          varying
+     D  i_name                       11a   value  varying
+      *---------------------------------------------------------------------------------------------
+     D uCase...
+     D                 PR          2000A          varying
+     D  i_string                   2000A   value  varying
+      *--------------------------------------------------------------------
+     D vrcvar          s            145
+     D qm_msgid        s              7
+     D qm_msgtxt       s            500
+     D qm_msgq         s             10
+     D qm_msgtyp       s             10
+     D mbrname         s             10
+     D mbrtype         s             10
+     D mbrtext         s             50
+     D srcfile         s             10
+     D srclen          s              5
+     D srclenN         s              5  0   inz(0)
+     D srccssid        s              5
+     D bldexc          s           2000
+     D write_flag      s              1n   inz(*off)
+     D srcSeqno        s              6s 2 inz(0)
+     D aa              s              5u 0 inz(0)
+     D ll              s              5u 0 inz(0)
+     D qs              c                   ''''
+     D qd              c                   '"'
+     D errFLag         s              1    inz(*off)
+     D cnd_msg         s             42
+     D cnd_values      s            110
+     D cnd_var         s             10
+     D cnd_rtnVal      s             10
+     D cnd_array       s                   dim(32) inz like(condition)
+     D cnd_ptr         s             10i 0 inz
+     D condition       s             10a
+     D condList        s           2000a
+     D release         s             10a
+     D dltsplf         s             10a
+     D objd_obj        s             10a
+     D objd_lib        s             10a
+     D objd_objtype    s             10a
+     D objd_rtnlib     s             10a
+     D objd0100        ds
+     D  od_bytRet              1      4i 0
+     D  od_bytAvl              5      8i 0
+     D  od_name                9     18a
+     D  od_lib                19     28a
+     D  od_type               29     38a
+     D  od_rtnLib             39     48a
+     D fld_array       ds
+     D  fld_x                        10i 0 inz
+     D  fld_name                     11a   inz dim(64) varying
+     D  fld_value                    64a   inz dim(64) varying
+     D var_name        s             11a   inz varying
+     D var_value       s             64a   inz varying
+      * Error return code parm for APIs.
+     D errCode         DS
+     D  errCode_bytPrv...
+     D                               10i 0 inz(%size(errCode))
+     D  errCode_bytAvl...
+     D                               10i 0 inz(0)
+     D  errCode_excID...
+     D                                7a   inz
+     D  errCode_reserved...
+     D                                1a   inz
+     D  errCode_escData...
+     D                              256a   inz
+      * Optional parameters
+     D OvrSrcFile      s                   like(i_OvrSrcFile) inz
+     D isPreDefCond    s               N   inz(*off)
+     D TgtRls          s                   like(i_TgtRls    ) inz
+      *
+      * Program status data structure.
+     D sds            sds
+     D  sds_pgmName                  10A
+     D  sds_status                    5S 0
+     D  sds_prvStat                   5S 0
+     D  sds_lastSeq                   8A
+     D  sds_lastSubR                  8A
+     D  sds_numParm                   3S 0
+     D  sds_msgID                     7A
+     D  sds_MiInstr                   4A
+     D  sds_wrkArea                  30A
+     D  sds_lib                      10A
+     D  sds_msgText                  80A
+      *--------------------------------------------------------------------
+     Ixmlinput  ns
+     I                                 13   21  xmltag1
+     I                                 18   27  xmltag2
+     I                                 13  112  xmlcode
+      *--------------------------------------------------------------------
+     C     *entry        plist
+     C                   parm                    ParseSrcMbr      10            source member
+     C                   parm                    ParseSrcFile     10            source file
+     C                   parm                    ParseSrcLib      10            source lib
+      *  optional parameters:
+     C                   parm                    i_OvrSrcFile     10            override to src
+     C                   parm                    i_Conditions    128            pre-def conditions
+     C                   parm                    i_TgtRls         10            target release
+      *
+      *  get optional parameter: Overrride to Source File
+     C                   if        %parms() >= 4
+     C                   eval      OvrSrcFile = i_OvrSrcFile
+     C                   else
+     C                   eval      OvrSrcFile = ''
+     C                   endif
+      *
+      *  get optional parameter: Conditions
+     C                   if        %parms() >= 5
+     C                   if        %subst(i_Conditions:1:32) <> ''
+     C                   eval      cnd_array = loadConditions(i_Conditions)
+     C                   eval      isPreDefCond = *on
+     C                   else
+     C                   eval      isPreDefCond = *off
+     C                   endif
+     C                   endif
+      *
+      *  get optional parameter: Target Release
+     C                   if        %parms() >= 6
+     C                   eval      TgtRls = i_TgtRls
+     C                   else
+     C                   eval      TgtRls = getCurrentRelease()
+     C                   endif
+      *
+     C                   exsr      srValidate                                   make sure exist
+      *
+      * Set user selected library *first for remainder of program
+     C                   eval      bldexc = 'RMVLIBLE LIB('+
+     C                             %trimr(ParseSrcLib) + ')'
+     C                   callp(e)  qcmdexc(bldexc:%len(%trimr(bldexc)))
+      *
+     C                   eval      bldexc = 'ADDLIBLE LIB('+
+     C                             %trimr(ParseSrcLib) + ') POSITION(*FIRST)'
+     C                   callp(e)  qcmdexc(bldexc:%len(%trimr(bldexc)))
+      *
+      *       CPF2103 - Library &1 already exists in library list.
+     C                   if        %error and sds_msgID <> 'CPF2103'
+     C                   eval      qm_msgtxt = '0000 ' + sds_msgText
+     C                   exsr      srKill
+     C                   endif
+      *
+      * Set variable &TOLIB
+     C                   callp     setVariable('tolib': ParseSrcLib)
+      *
+      * Set variable &TGTRLS
+     C                   callp     setVariable('tgtrls': TgtRls)
+      *
+      * Set variable &XMLFILE
+     C                   callp     setVariable('xmlfile': ParseSrcFile)
+      *
+      * Set variable &XMLLIB
+     C                   callp     setVariable('xmllib': ParseSrcFile)
+      *
+      * Set variable &XMLMBR
+     C                   callp     setVariable('xmlmbr': ParseSrcFile)
+      *
+      * Override Input file to uploaded text file
+     C                   eval      bldexc = 'OVRDBF FILE(XMLINPUT) TOFILE(' +
+     C                             %trimr(ParseSrcLib)+'/'+
+     C                             %trimr(ParseSrcFile) + ') MBR(' +
+     C                             %trimr(ParseSrcMbr) + ')'
+     C                   callp     qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   open      xmlinput
+     C                   read      xmlinput
+     C                   dow       not %eof
+      * write records to outfile if flag is on
+     C                   select
+     C                   when      write_flag = *on
+     C                   if        xmltag2<>'</copysrc>'
+     C                   eval      srcSeqno=srcSeqno+1
+     C                   except    write_one
+     C                   else
+     C                   eval      write_flag=*off
+     C                   close     qxxxsrc
+     C                   endif
+      *
+      * Extract values based on xml tags.
+     C                   when      xmltag1 = 'mbrname ='
+     C                   eval      mbrname = %subst(xmlcode:13:10)
+     C                   when      xmltag1 = 'mbrtype ='
+     C                   eval      mbrtype =%subst(xmlcode:13:10)
+     C                   when      xmltag1 = 'mbrtext ='
+     C                   eval      mbrtext =dblQuotes(%subst(xmlcode:13:50))
+     C                   when      xmltag1 = 'srcfile ='
+     C                   if        OvrSrcFile <> ''
+     C                   eval      srcfile =OvrSrcFile
+     C                   else
+     C                   eval      srcfile =%subst(xmlcode:13:10)
+     C                   endif
+     C                   when      xmltag1 = 'srclen  ='
+     C                   eval      srclen  =%subst(xmlcode:13:5)
+     C                   when      xmltag1 = 'srccssid='
+     C                   eval      srccssid=%subst(xmlcode:13:5)
+      *--------------------------------------------------------------------
+      * Start of data to copy.  Create source files/mbrs as required.
+      *--------------------------------------------------------------------
+     C                   when      xmltag1='<copysrc>'
+     C                   move      srclen        srclenN
+      * crtsrcpf
+     C                   eval      bldexc = 'CRTSRCPF FILE(' +
+     C                             %trimr(ParseSrcLib)+'/'+
+     C                             %trimr(srcfile) + ') RCDLEN(' +
+     C                             srclen + ') CCSID(' +
+     C                             srccssid + ')'
+     C                   callp(e)  qcmdexc(bldexc:%len(%trimr(bldexc)))
+      * addpfm
+     C                   eval      bldexc = 'ADDPFM   FILE(' +
+     C                             %trimr(ParseSrcLib)+'/'+
+     C                             %trimr(srcfile) + ') MBR(' +
+     C                             %trimr(mbrname) + ') SRCTYPE(' +
+     C                             %trimr(mbrtype) + ') TEXT(' +
+     C                             qs+%trimr(mbrtext)+qs + ')'
+     C                   callp(e)  qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   if        %error
+      * chgpfm
+     C                   eval      bldexc = 'CHGPFM   FILE(' +
+     C                             %trimr(ParseSrcLib)+'/'+
+     C                             %trimr(srcfile) + ') MBR(' +
+     C                             %trimr(mbrname) + ') TEXT(' +
+     C                             qs+%trimr(mbrtext)+qs + ')'
+     C                   callp     qcmdexc(bldexc:%len(%trimr(bldexc)))
+      * clr mbr
+     C                   eval      bldexc = 'CLRPFM   FILE(' +
+     C                             %trimr(ParseSrcLib)+'/'+
+     C                             %trimr(srcfile) + ') MBR(' +
+     C                             %trimr(mbrname) + ')'
+     C                   callp     qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   endif
+      * ovr to outfile mbr
+     C                   eval      bldexc = 'OVRDBF QXXXSRC ' +
+     C                             %trimr(ParseSrcLib) + '/' +
+     C                             %trimr(srcfile) + ' ' +
+     C                             mbrname
+     C                   callp     qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   clear                   srcSeqno
+     C                   open      qxxxsrc
+     C                   eval      write_flag = *on
+      *--------------------------------------------------------------------
+      * Compile statement.  Read next record and execute it.
+      *--------------------------------------------------------------------
+     C                   when      xmltag1 = '<compile '
+     C                   eval      condList= getAttrData('condition':xmlcode:'')
+     C                   read      xmlinput
+     C                   eval      bldexc = readElement('compile')
+     C                   if        isCondition(condList)
+     C                   exsr      RplVars
+     C                   exsr      SetTgtRls
+     C                   callp     qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   endif
+      *--------------------------------------------------------------------
+      * qcmdexc statement. Build statement from each record between start
+      * and stop tags.  When stop tag is found, execute statement.
+      *--------------------------------------------------------------------
+     C                   when      xmltag1 = '<qcmdexc '
+     C                   eval      condList = getAttrData('condition'
+     C                                                    :xmlcode:'')
+     C                   eval      release  = getAttrData('release'
+     C                                                    :xmlcode:'*CURRENT')
+     C                   eval      dltsplf  = getAttrData('dltsplf'
+     C                                                    :xmlcode:'*NONE')
+     C                   read      xmlinput
+     C                   eval      bldexc = readElement('qcmdexc')
+     C                   if        isCondition(condList) and
+     C                             isRelease(tgtRls: release)
+     C                   exsr      RplVars
+     C                   exsr      SetTgtRls
+     C                   if        %subst(bldexc: 1: 3) = 'DLT'
+     C                   callp (e) qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   else
+     C                   callp (e) qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   if        %error()
+     C                   eval      qm_msgtxt = '0000 Failed to execute: '+bldexc
+     C                   exsr      srKill
+     C                   endif
+     C                   if        dltsplf <> '' and dltsplf <> '*NONE'
+     C                   eval      bldexc = 'DLTSPLF FILE(' + dltsplf +
+     C                                      ') JOB(*) SPLNBR(*LAST)'
+     C                   callp (e) qcmdexc(bldexc:%len(%trimr(bldexc)))
+     C                   endif
+     C                   endif
+     C                   endif
+      *--------------------------------------------------------------------
+      * SQL statement. Build statement from each record between start
+      * and stop tags.  When stop tag is found, execute SQL statement.
+      *--------------------------------------------------------------------
+     C                   when      xmltag1 = '<execsql '
+     C                   eval      condList = getAttrData('condition'
+     C                                                    :xmlcode:'')
+     C                   read      xmlinput
+     C                   eval      bldexc = readElement('execsql')
+     C                   if        isCondition(condList)
+     C                   exsr      RplVars
+     C                   exsr      srSQLExecute
+     C                   endif
+      *--------------------------------------------------------------------
+      * Send messages to user as program executes
+      * Extract message ID, Message Type, from <sendmsg>
+      * read a record and get the single line of message text.
+      *--------------------------------------------------------------------
+     C                   when      xmltag1 = '<sendmsg '
+     C                   eval      qm_msgid = %subst(xmlcode:22:7)
+     C                   eval      qm_msgtyp = %subst(xmlcode:46:10)
+     C                   read      xmlinput
+     C                   eval      qm_msgq   = '*EXT   '
+     C                   eval      qm_msgtxt = xmlcode
+     C                   exsr      srSndMessage
+      *--------------------------------------------------------------------
+      * rtvobjd statement. retrieve object description of the specified
+      * object. Store attributes in specified fields.
+      *--------------------------------------------------------------------
+     C                   when      xmltag1 = '<rtvobjd '
+     C                   eval      condList = getAttrData('condition'
+     C                                                    :xmlcode:'')
+     C                   eval      bldexc = readElement('rtvobjd')
+     C                   eval      objd_obj    =getAttrData('obj'    :bldexc:'')
+     C                   eval      objd_lib    =getAttrData('lib'    :bldexc:'')
+     C                   eval      objd_objtype=getAttrData('objtype':bldexc:'')
+     C                   eval      objd_rtnlib =getAttrData('rtnlib' :bldexc:'')
+     C                   if        isCondition(condList)
+     C                   exsr      srRtvObjD
+     C                   endif
+      *--------------------------------------------------------------------
+      * chgvar statement.
+      *--------------------------------------------------------------------
+     C                   when      xmltag1 = '<chgvar  '
+     C                   eval      condList = getAttrData('condition'
+     C                                                    :xmlcode:'')
+     C                   eval      bldexc = readElement('chgvar')
+     C                   eval      var_name  = getAttrData('var'    :bldexc:'')
+     C                   eval      var_value = getAttrData('value'  :bldexc:'')
+     C                   if        isCondition(condList)
+     C                   exsr      srChgVar
+     C                   endif
+      *--------------------------------------------------------------------
+      * Query condition
+      *--------------------------------------------------------------------
+     C                   when      xmltag1 = '<qrycond '
+     C                   eval      bldexc = readElement('qrycond')
+     C                   eval      cnd_msg = getAttrData('msg'   : bldexc: '')
+     C                   eval      cnd_values = getAttrData('values': bldexc:'')
+     C                   eval      cnd_var = getAttrData('var': bldexc: '*NONE')
+     C                   exsr      srQueryCond
+     C                   endsl
+      *
+     C                   read      xmlinput
+     C                   enddo
+      *
+     C                   exsr      srSQLEnd
+     C                   eval      *inlr=*on
+     C                   return
+      *--------------------------------------------------------------------
+      * Replace variable names with their associated values.
+      *--------------------------------------------------------------------
+     C     RplVars       begsr
+     C                   eval      aa=%scan('&':bldexc)
+     C                   dow       aa>0
+     C                   eval      var_name=getVarName(bldexc:aa)
+     C                   eval      var_value=getVarValue(var_name)
+     C                   eval      bldexc=%replace(var_value:bldexc:aa
+     C                                             :%len(var_name))
+     C                   eval      aa=%scan('&':bldexc)
+     C                   enddo
+     C                   endsr
+      *--------------------------------------------------------------------
+      * Sets the target release according to the optional parameter
+      * i_TgtRls.
+      *--------------------------------------------------------------------
+     C     SetTgtRls     begsr
+     C                   if        TgtRls = getCurrentRelease()
+     C                   leavesr
+     C                   endif
+     C                   eval      bldexc =
+     C                                setTargetRelease('TGTRLS': bldexc: TgtRls)
+     C                   endsr
+      *--------------------------------------------------------------------
+      * Check of file, lib, member exist.
+      *--------------------------------------------------------------------
+     C     srValidate    begsr
+     C                   callp     QUSRMBRD(
+     C                             vrcvar:
+     C                             145:
+     C                             'MBRD0100':
+     C                             ParseSrcFile + ParseSrcLib:
+     C                             ParseSrcMbr:
+     C                             '0':
+     C                             errCode)
+      *   --------------------------------------------------------------------------------
+      *   If error occurred on call, send appropriate message back to user.
+      *   ---------------------------------------------------------------------------------
+     C                   if        errCode_bytAvl <> 0                          error occurred
+     C                   select
+      * lib not found
+     C                   when      errCode_excID = 'CPF9810'
+     C                   eval      qm_msgtxt = '0000 Library ' +
+     C                             %trimr(ParseSrcLib) + ' was not found.'
+      * src file not found
+     C                   when      errCode_excID = 'CPF9812'
+     C                   eval      qm_msgtxt = '0000 Source file ' +
+     C                             %trimr(ParseSrcFile)+' was not found in ' +
+     C                             %trimr(ParseSrcLib) + '.'
+      * member not found
+     C                   when      errCode_excID = 'CPF9815'
+     C                   eval      qm_msgtxt = '0000 Member ' +
+     C                             %trimr(ParseSrcMbr)+' was not found in ' +
+     C                             %trimr(ParseSrcLib)+'/'+ %trimr(ParseSrcFile)
+      * unexpected
+     C                   other
+     C                   eval      qm_msgtxt = '0000 Unexpected message ' +
+     C                             errCode_excID + ' received. '
+     C                   endsl
+      * send message
+     C                   exsr      srKill
+     C                   eval      *inlr=*on
+     C                   return
+     C                   endif
+     C                   endsr
+      *--------------------------------------------------------------------
+      * kill application
+      *--------------------------------------------------------------------
+     C     srKill        begsr
+     C                   eval      qm_msgid  = 'CPD0006'
+     C                   eval      qm_msgtyp = '*DIAG'
+     C                   eval      qm_msgq   = '*CTLBDY'
+     C                   exsr      srSndMessage
+     C                   eval      qm_msgtxt = *blanks
+     C                   eval      qm_msgid  = 'CPF0002'
+     C                   eval      qm_msgtyp = '*ESCAPE'
+     C                   exsr      srSndMessage
+     C                   endsr
+      *--------------------------------------------------------------------
+      * call send program message api
+      *--------------------------------------------------------------------
+     C     srSndMessage  begsr
+     C                   callp     QMHSNDPM(
+     C                             qm_msgid:
+     C                             'QCPFMSG   *LIBL     ':
+     C                             qm_msgtxt:
+     C                             %size(qm_msgtxt):
+     C                             qm_msgtyp:
+     C                             qm_msgq:
+     C                             1:
+     C                             '    ':
+     C                             errCode)
+     C                   endsr
+      *--------------------------------------------------------------------
+      * retrieve object description and store attributes
+      *--------------------------------------------------------------------
+     C     srRtvObjD     begsr
+     C                   callp     QUSROBJD(objd0100
+     C                                      : %size(objd0100)
+     C                                      : 'OBJD0100'
+     C                                      : objd_obj + objd_lib
+     C                                      : objd_objtype
+     C                                      : errCode)
+     C                   if        errCode_bytAvl <> 0                          error occurred
+     C                   eval      qm_msgtxt = '0000 Failed to retrieve +
+     C                             object description of object ' +
+     C                             %trim(objd_lib) + '/' + %trim(objd_obj) +
+     C                             ' type ' + %trim(objd_objtype) + '.'
+      * send message
+     C                   exsr      srKill
+     C                   else
+     C                   callp     setVariable(objd_rtnlib: od_rtnlib)
+     C                   endif
+     C                   endsr
+      *--------------------------------------------------------------------
+      * change variable
+      *--------------------------------------------------------------------
+     C     srChgVar      begsr
+     C                   callp     setVariable(var_name: var_value)
+     C                   endsr
+      *--------------------------------------------------------------------
+      * execute SQL statement.
+      *--------------------------------------------------------------------
+     C     srSQLExecute  begsr
+     C                   exsr      srSQLInit
+     C                   Eval      retCode = SQLExecDirect(hstmt    :
+     C                                                     bldexc   :
+     C                                                     SQL_NTS  )
+     C                   endsr
+      *--------------------------------------------------------------------
+      * query condition.
+      *--------------------------------------------------------------------
+     C     srQueryCond   begsr
+     C                   if        isPreDefCond = *off
+     C                   eval      cnd_values = uCase(cnd_values)
+     C                   dou       (%scan(cnd_rtnVal: cnd_values) > 0) and
+     C                             (cnd_rtnval <> ''                 )
+     C                   eval      cnd_rtnval = ' '
+     C     cnd_msg       dsply                   cnd_rtnval
+     C                   eval      cnd_rtnVal = uCase(cnd_rtnVal)
+     C                   enddo
+     C                   eval      cnd_ptr = cnd_ptr + 1
+     C                   eval      cnd_array(cnd_ptr) = cnd_rtnVal
+     C                   endif
+     C                   if        (cnd_var <> '*NONE')
+     C                   callp     setVariable(cnd_var: cnd_rtnval)
+     C                   endif
+     C                   endsr
+      *--------------------------------------------------------------------
+      * initialize SQL.
+      *--------------------------------------------------------------------
+     C     srSQLInit     begsr
+      *
+     C                   if        sqlInit = *off
+     C                   Eval      retCode = SQLAllocEnv(%addr(henv))
+     C                   Eval      retCode = SQLAllocConnect(henv: %addr(hdbc))
+     C                   Eval      retCode = SQLConnect(hdbc      :
+     C                                                  '*LOCAL'  :
+     C                                                  SQL_NTS   :
+     C                                                  *null     :
+     C                                                  SQL_NTS   :
+     C                                                  *null     :
+     C                                                  SQL_NTS   )
+     C                   Eval      cOptVal = SQL_COMMIT_NONE
+     C                   Eval      retCode = SQLSetConnectOption(hdbc          :
+     C                                                          SQL_ATTR_COMMIT:
+     C                                                          %addr(cOptVal) )
+     C                   Eval      retCode = SQLAllocStmt(hdbc       :
+     C                                                  %addr(hstmt) )
+     C                   eval      sqlInit = *on
+     C                   endif
+     C                   endsr
+      *--------------------------------------------------------------------
+      * end SQL.
+      *--------------------------------------------------------------------
+     C     srSQLEnd      begsr
+     C                   if        sqlInit = *on
+     C                   Eval      retCode = SQLFreeStmt(hstmt    :
+     C                                                   SQL_DROP )
+     C                   Eval      retCode = SQLDisconnect(hdbc)
+     C                   Eval      retCode = SQLFreeConnect(hdbc)
+     C                   Eval      retCode = SQLFreeEnv(henv)
+     C                   eval      sqlInit = *off
+     C                   endif
+     C                   endsr
+      *--------------------------------------------------------------------
+      * error handler
+      *--------------------------------------------------------------------
+     C     *pssr         begsr
+     C                   if        errFLag = *off
+     C                   eval      errFlag = *on
+     C                   exsr      srSQLEnd
+     C                   endif
+     C                   endsr     '*CANCL'
+     Oqxxxsrc   e            write_one
+     O                       srcSeqno             6
+     O                                           12 '000000'
+     O                       xmlcode            112
+      *--------------------------------------------------------------------
+      * Read element
+      *--------------------------------------------------------------------
+     P readElement...
+     P                 B
+     D                 PI                        like(bldexc)
+     D  i_element                     9A   value varying
+      *
+     D i               S             10I 0 inz
+     D value           S                   like(bldexc ) inz
+     D endTag          S                   like(xmlTag2) inz
+      *
+     C                   eval      i = 1
+     C                   eval      endTag = '</' + i_element + '>'
+     C                   dow       xmltag2 <> endTag
+     C                   eval      %subst(value: i: %len(xmlcode)) = xmlcode
+     C                   eval      i = i + %len(xmlcode)
+     C                   read      xmlinput
+     C                   enddo
+      *
+     C                   Return    value
+      *
+     P                 E
+      *--------------------------------------------------------------------
+      * Double quotes
+      *--------------------------------------------------------------------
+     P dblQuotes...
+     P                 B
+     D                 PI          2048A         varying
+     D  i_string                   2048A   value varying
+      *
+     D x               S             10I 0         inz
+     D string          S           2048A   varying inz
+      *
+     C                   For       x = 1 to %len(i_string)
+     C                   Eval      string = string + %subst(i_string: x:1)
+     C                   If        %subst(i_string: x : 1) = qs
+     C                   Eval      string = string + qs
+     C                   Endif
+     C                   Endfor
+      *
+     C                   Return    string
+      *
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  Get Attribute Data from String
+      *---------------------------------------------------------------------------------------------
+     P getAttrData...
+     P                 B
+     D                 PI          2000A          varying                       like(string_t)
+     D  i_attr                       10a   value
+     D  i_string                   2000A   value  varying                       like(string_t)
+     D  i_default                  2000A   value  varying                       like(string_t)
+      *
+      *  return value
+     D attrData        S           2000A   varying inz                          like(string_t)
+      *
+      *  local fields
+     D attr            S             20a   varying inz
+     D lenAttr         S             10i 0 inz
+     D aa              S             10i 0 inz
+     D cc              S             10i 0 inz
+      *
+     D Qd              C                   const('"')
+      *-------------------------------------------------------------------*
+      *
+      *  find the keyword
+     C                   eval      attr = %trim(i_attr) + '=' + Qd
+      *
+     C                   eval      aa   = %scan(attr: i_string)
+     C                   if        aa = 0
+     C                   return    i_default
+     C                   endif
+      *
+     C                   eval      aa   = aa + %len(attr)
+     C                   eval      cc   = %scan(Qd: i_string: aa+1)
+      *
+      *  return the data between the double-quotes
+     C                   if        (cc-aa) > 0
+     C                   eval      attrData = %subst(i_string: aa: cc-aa)
+     C                   endif
+      *
+     C                   Return    attrData
+      *
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  Load condition array
+      *---------------------------------------------------------------------------------------------
+     P loadConditions...
+     P                 B
+     D                 PI                  dim(32) like(condition)
+     D  i_conditions                128A   value
+      *
+      *  return value
+     D cnd_array       s                   dim(32) inz like(condition)
+     D pValue          s               *   inz
+     D x               s             10i 0 inz
+     D i               s             10i 0 inz
+     D cnd_value       s            128a   varying
+     D var_name        s             64a   varying
+     D var_value       s             64a   varying
+      *-------------------------------------------------------------------*
+      /FREE
+
+         i_conditions = uCase(i_conditions);
+
+         pValue = strtok(i_conditions: ';');
+         dow (pValue <> *null);
+            x = x + 1;
+            cnd_value = %str(pValue);
+            i = %scan('=': cnd_value);
+            if (i = 0);
+               cnd_array(x) = cnd_value;
+            else;
+               var_name = %subst(cnd_value: 1: i-1);
+               if (%subst(var_name: 1: 1) = '&');
+                  var_name = %subst(var_name: 2);
+               endif;
+               var_value = %subst(cnd_value: i+1);
+               setVariable(var_name: var_value);
+               cnd_array(x) = var_value;
+            endif;
+            pValue = strtok(*null: ';');
+         enddo;
+
+         return cnd_array;
+      /END-FREE
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  Check for a condition
+      *---------------------------------------------------------------------------------------------
+     P isCondition...
+     P                 B
+     D                 PI              n
+     D  i_condList                 2000A   value
+      *
+      *  return value
+     D isCondition     S               n   inz
+     D pValue          S               *   inz
+     D aCondition      S             10a   inz
+      *-------------------------------------------------------------------*
+      *
+     C                   eval      i_condList = uCase(i_condList)
+      *
+     C                   if        (i_condList = '*NONE')  or
+     C                             (i_condList = ''     )
+     C                   eval      *in01 = *on
+     C                   else
+      *
+     C                   eval      pValue = strtok(i_condList: ' ')
+     C                   dow       pValue <> *null
+     C                   eval      aCondition = %str(pValue)
+     C     aCondition    lookup    cnd_array                              01
+     C                   if        not *in01
+     C                   leave
+     C                   endif
+     C                   eval      pValue = strtok(*null     : ' ')
+     C                   enddo
+      *
+     C                   endif
+      *
+     C                   if        *in01
+     C                   eval      isCondition = *on
+     C                   else
+     C                   eval      isCondition = *off
+     C                   endif
+      *
+     C                   Return    isCondition
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  Get the current release level of the operation system
+      *---------------------------------------------------------------------------------------------
+     P getCurrentRelease...
+     P                 B
+     D                 PI            10A
+      *
+      *  QSZRTVPR API
+     D QSZRTVPR...
+     D                 PR                  extpgm('QSZRTVPR')
+     D  o_rcvVar                  65535A          options(*varsize)
+     D  i_lenRcvVar                  10I 0 const
+     D  i_format                      8A   const
+     D  o_prodInf                 65535A   const  options(*varsize)
+     D  io_errCode                65535A          options(*varsize)
+      *
+     D prdi0100        DS                  qualified
+     D  productID              1      7A   inz('*OPSYS')
+     D  releaseLvl             8     13A   inz('*CUR'  )
+     D  productOpt            14     17A   inz('0000'  )
+     D  loadID                18     27A   inz('*CODE' )
+      *  Shortened!:
+     D prdr0100        DS                  qualified
+     D  bytRet                 1      4I 0
+     D  bytAvl                 5      8I 0
+     D  reserved_1             9     12I 0
+     D  productID             13     19A
+     D  releaseLvl            20     25A
+      *  API error code
+     D errCode         DS
+     D  bytPrv                       10i 0 inz(0)
+     D  bytAvl                       10i 0 inz(0)
+      *-------------------------------------------------------------------*
+      *
+     C                   Callp     QSZRTVPR(prdr0100: %size(prdr0100):
+     C                                      'PRDR0100': prdi0100: errCode)
+     C                   Return    prdr0100.releaseLvl
+      *
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  Check the release level
+      *---------------------------------------------------------------------------------------------
+     P isRelease...
+     P                 B
+     D                 PI              n
+     D  i_os_release                  6A   value
+     D  i_release                    10A   value
+      *
+      *  return value
+     D isRelease       S               n   inz(*off)
+      *  Release
+     D release         DS
+     D  r_operator             1      3a
+     D  r_space                4      4a
+     D  r_level                5     10a
+      *-------------------------------------------------------------------*
+      *
+     C                   If        i_release = '*CURRENT'
+     C                   Eval      isRelease = *on
+     C                   Else
+     C                   Eval      release = i_release
+     C                   Select
+     C                   When      r_operator = '*LT' and
+     C                             i_os_release < r_level
+     C                   Eval      isRelease = *on
+     C                   When      r_operator = '*EQ' and
+     C                             i_os_release = r_level
+     C                   Eval      isRelease = *on
+     C                   When      r_operator = '*GT' and
+     C                             i_os_release > r_level
+     C                   Eval      isRelease = *on
+     C                   When      r_operator = '*LE' and
+     C                             i_os_release <= r_level
+     C                   Eval      isRelease = *on
+     C                   When      r_operator = '*GE' and
+     C                             i_os_release >= r_level
+     C                   Eval      isRelease = *on
+     C                   Other
+     C                   Eval      isRelease = *off
+     C                   Endsl
+     C                   Endif
+      *
+     C                   Return    isRelease
+      *
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  Replaces the value of a given keyword.
+      *---------------------------------------------------------------------------------------------
+     P setTargetRelease...
+     P                 B
+     D                 PI          2000A          varying
+     D  i_keyword                    10A   value  varying
+     D  i_string                   2000A   value  varying
+     D  i_value                      10A   value  varying
+      *
+      *  return value
+     D string          S           2000A   varying inz
+      *
+      *  helper fields
+     D x               S             10I 0 inz
+     D l               S             10I 0 inz
+     D tmpKeyword      S                   like(i_keyword) inz
+     D tmpString       S                   like(i_string ) inz
+     D tmpCmd          S             10A   inz
+      *-------------------------------------------------------------------*
+      /FREE
+
+         tmpKeyword = uCase(%trimR(i_keyword));
+         tmpString  = uCase(%trimR(i_string ));
+         x = %scan(' ': tmpString);
+         if x = 0;
+            return i_string;
+         endif;
+         tmpCmd = %subst(tmpString: 1: x);
+         if tmpCmd <> 'CRTRPGMOD' and
+            tmpCmd <> 'CRTRPGPGM' and
+            tmpCmd <> 'CRTCLMOD'  and
+            tmpCmd <> 'CRTCLPGM'  and
+            tmpCmd <> 'CRTCBLMOD' and
+            tmpCmd <> 'CRTCBLPGM' and
+            tmpCmd <> 'CRTCMOD'   and
+            tmpCmd <> 'CRTCPPMOD' and
+            tmpCmd <> 'CRTBNDC'   and
+            tmpCmd <> 'CRTBNDCBL' and
+            tmpCmd <> 'CRTBNDCL'  and
+            tmpCmd <> 'CRTBNDCPP' and
+            tmpCmd <> 'CRTBNDDIR' and
+            tmpCmd <> 'CRTBNDRPG' and
+            tmpCmd <> 'CRTPGM'    and
+            tmpCmd <> 'CRTSRVPGM' ;
+            return i_string;
+         endif;
+         x = %scan(tmpKeyword + '(': tmpString);
+         if x = 0;
+            return %trimR(i_string) +
+                   ' ' + tmpKeyword + '(' + %trimR(i_value) + ')';
+         endif;
+         l = %scan(')': tmpString: x + %len(i_keyword) + 1);
+         if l = 0;
+            return i_string;
+         endif;
+         l = l - x + 1;
+         string = %replace(tmpKeyword + '(' + %trimR(i_value) + ')'
+                           : i_string: x: l);
+         Return string;
+
+      /END-FREE
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  Store field value.
+      *---------------------------------------------------------------------------------------------
+     P setVariable...
+     P                 B
+     D                 PI
+     D  i_fldName                    10A   value  varying
+     D  i_value                      64A   value  varying
+     D i               s             10I 0 inz
+      *-------------------------------------------------------------------*
+      /FREE
+
+         if (i_fldName = '');
+            return;
+         endif;
+
+         for i = 1 to fld_x;
+            if (uCase('&' + %trim(i_fldName)) = uCase(fld_name(i)));
+               fld_value(i) = i_value;
+               return;
+            endif;
+         endfor;
+
+         if (fld_x >= %elem(fld_name));
+            return;
+         endif;
+
+         fld_x = fld_x + 1;
+         fld_name(fld_x)  = uCase('&' + %trim(i_fldName));
+         fld_value(fld_x) = i_value;
+
+      /END-FREE
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  get variable name from statement.
+      *---------------------------------------------------------------------------------------------
+     P getVarName...
+     P                 B
+     D                 PI            11a          varying
+     D  i_bldexc                           value  like(bldexc)
+     D  i_pos                        10i 0 value
+     D name            s             11a   varying inz
+     D CHARS           c                   '&ABCDEFGHIJKLMNOPQRSTUVWXYZ+
+     D                                      abcdefghijklmnopqrstuvwxyz+
+     D                                      1234567890_'
+      *-------------------------------------------------------------------*
+      /FREE
+
+         dow (i_pos<=%len(i_bldexc) and
+              %check(CHARS:%subst(i_bldexc:i_pos:1))=0);
+            name = name+%subst(i_bldexc:i_pos:1);
+            i_pos=i_pos+1;
+         enddo;
+
+         return name;
+
+      /END-FREE
+      *
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  get variable value.
+      *---------------------------------------------------------------------------------------------
+     P getVarValue...
+     P                 B
+     D                 PI            64a          varying
+     D  i_name                       11a   value  varying
+     D i               s             10i 0 inz
+     D value           s             64a   varying inz('?')
+      *-------------------------------------------------------------------*
+      /FREE
+
+         for i=1 to fld_x;
+            if (ucase(fld_name(i))=uCase(i_name));
+               value=%trimR(fld_value(i));
+               leave;
+            endif;
+         endfor;
+
+         return value;
+
+      /END-FREE
+      *
+     P                 E
+      *---------------------------------------------------------------------------------------------
+      *  convert to upper case
+      *---------------------------------------------------------------------------------------------
+     P uCase...
+     P                 B
+     D                 PI          2000A          varying
+     D  i_string                   2000A   value  varying
+     D uCase           s           2000A   inz varying
+     D LC              C                   const('abcdefghijklmnopqrstuvwxyz')
+     D UC              C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+      *-------------------------------------------------------------------*
+      /FREE
+
+         uCase = %xlate(LC:UC:i_string);
+
+         return uCase;
+
+      /END-FREE
+     P                 E
+      * /// END   OF INSTALL PGM HERE   ****************************************** ///
+      * /// do not copy past this point ///
+]]>  </install_program>
+<qrycond
+  msg="'Select language (GER, ENG)'"
+  values="GER        ENG"
+  var="LANG">
+<![CDATA[
+]]>  </qrycond>
+<chgvar   condition="*NONE" var="SRCFILE" value="QDSPSRC">
+<![CDATA[
+]]>  </chgvar>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing A_INSTALL  type CLP - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "A_INSTALL "
+mbrtype =  "CLP       "
+mbrtext =  "DSPSRC - Installer                                "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+     /* =================================================================== */
+     /*                                                                     */
+     /*  Documentation:                                                     */
+     /*                                                                     */
+     /*  Utility . . . : DSPSRC                                        */
+     /*  Object  . . . : A_INSTALL  (PGM)                                   */
+     /*  Source member : A_INSTALL                                          */
+     /*  Source type . : CLLE                                               */
+     /*  Description   : DSPSRC - Installer                                 */
+     /*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      */
+     /*                                                                     */
+     /* =================================================================== */
+     /*                                                                     */
+     /*  This software is free software, you can redistribute it and/or     */
+     /*  modify it under the terms of the GNU General Public License (GPL)  */
+     /*  as published by the Free Software Foundation.                      */
+     /*                                                                     */
+     /*  See GNU General Public License for details.                        */
+     /*          http://www.opensource.org                                  */
+     /*          http://www.opensource.org/licenses/gpl-license.html        */
+     /*                                                                     */
+     /* =================================================================== */
+     /*  History:                                                           */
+     /*                                                                     */
+     /*  Datum       Name          Änderung                                 */
+     /*  ----------  ------------  ---------------------------------------  */
+     /*                                                                     */
+     /* =================================================================== */
+     /*   >>PRE-COMPILER<<                                                  */
+     /*     >>CRTCMD<<    CRTBNDCL  PGM(QTEMP/&OB) +                        */
+     /*                             SRCFILE(&SL/&SF) SRCMBR(&SM);           */
+     /*     >>IMPORTANT<<                                                   */
+     /*       >>PARM<<    OPTION(*EVENTF);                                  */
+     /*     >>END-IMPORTANT<<                                               */
+     /*     >>EXECUTE<<                                                     */
+     /*     >>CMD<<       CALL   PGM(QTEMP/A_INSTALL) +                     */
+     /*                          PARM('*CURRENT' '&SF' '&LI' 'GER');        */
+     /*     >>CMD<<       DLTPGM PGM(QTEMP/A_INSTALL);                      */
+     /*   >>END-PRE-COMPILER<<                                              */
+     /* =================================================================== */
+             PGM        PARM(&TGTRLS &SRCFILE &TOLIB &LNG)
+
+             DCL        VAR(&TGTRLS   ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCFILE  ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB    ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LNG      ) TYPE(*CHAR) LEN( 3)
+
+             DCL        VAR(&SRCLIB   ) TYPE(*CHAR) LEN(10)
+
+             DCL        VAR(&PNLGRP   ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DSPF     ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CMD      ) TYPE(*CHAR) LEN(10)
+
+             CHGVAR     VAR(&SRCLIB) VALUE(&TOLIB   )
+
+             IF         COND(&LNG *EQ 'ENG') THEN(DO)
+                CHGVAR     VAR(&PNLGRP ) VALUE('DSPSRCPE')
+                CHGVAR     VAR(&DSPF   ) VALUE('DSPSRCDE')
+                CHGVAR     VAR(&CMD    ) VALUE('DSPSRCE')
+             ENDDO
+             ELSE       CMD(DO)
+                CHGVAR     VAR(&PNLGRP ) VALUE('DSPSRCPG')
+                CHGVAR     VAR(&DSPF   ) VALUE('DSPSRCDG')
+                CHGVAR     VAR(&CMD    ) VALUE('DSPSRCG')
+             ENDDO
+
+     /* ---------------------------------- */
+     /*  Delete old objects                */
+     /* ---------------------------------- */
+             DLTCMD     CMD(&TOLIB/DSPSRC)
+             MONMSG     MSGID(CPF2105)
+
+             DLTPNLGRP  PNLGRP(&TOLIB/DSPSRCP)
+             MONMSG     MSGID(CPF2105)
+
+             DLTMOD     MODULE(&TOLIB/DSPSRCC)
+             MONMSG     MSGID(CPF2105)
+
+             DLTMOD     MODULE(&TOLIB/DSPSRCR1)
+             MONMSG     MSGID(CPF2105)
+
+             DLTMOD     MODULE(&TOLIB/DSPSRCR2)
+             MONMSG     MSGID(CPF2105)
+
+             DLTMOD     MODULE(&TOLIB/DSPSRCR3)
+             MONMSG     MSGID(CPF2105)
+
+             DLTF       FILE(&TOLIB/DSPSRCD)
+             MONMSG     MSGID(CPF2105)
+
+             DLTPGM     PGM(&TOLIB/DSPSRCC)
+             MONMSG     MSGID(CPF2105)
+
+         /* --------------------------------- */
+         /*  DSPSRC v1.2 and before           */
+         /* --------------------------------- */
+             DLTPGM     PGM(&TOLIB/DSPSRCR1)
+             MONMSG     MSGID(CPF2105)
+
+             DLTPGM     PGM(&TOLIB/DSPSRCR2)
+             MONMSG     MSGID(CPF2105)
+
+             DLTPGM     PGM(&TOLIB/DSPSRCR3)
+             MONMSG     MSGID(CPF2105)
+
+     /* -------------------------------- */
+     /*  Create display file             */
+     /* -------------------------------- */
+             CRTDSPF    FILE(&TOLIB/DSPSRCD) +
+                          SRCFILE(&SRCLIB/&SRCFILE) +
+                          SRCMBR(&DSPF)
+             DLTSPLF    FILE(DSPSRCD  ) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+     /* -------------------------------- */
+     /*  Create modules                  */
+     /* -------------------------------- */
+             CRTCLMOD   MODULE(&TOLIB/DSPSRCC ) +
+                          SRCFILE(&SRCLIB/&SRCFILE) +
+                          SRCMBR(*MODULE) +
+                          DBGVIEW(*LIST) +
+                          TGTRLS(&TGTRLS)
+             DLTSPLF    FILE(DSPSRCC  ) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+             CRTRPGMOD  MODULE(&TOLIB/DSPSRCR1) +
+                          SRCFILE(&SRCLIB/&SRCFILE) +
+                          SRCMBR(*MODULE) +
+                          DBGVIEW(*LIST) TRUNCNBR(*NO) +
+                          TGTRLS(&TGTRLS)
+             DLTSPLF    FILE(DSPSRCR1 ) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+             CRTRPGMOD  MODULE(&TOLIB/DSPSRCR2) +
+                          SRCFILE(&SRCLIB/&SRCFILE) +
+                          SRCMBR(*MODULE) +
+                          DBGVIEW(*LIST) TRUNCNBR(*NO) +
+                          TGTRLS(&TGTRLS)
+             DLTSPLF    FILE(DSPSRCR2 ) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+             CRTRPGMOD  MODULE(&TOLIB/DSPSRCR3) +
+                          SRCFILE(&SRCLIB/&SRCFILE) +
+                          SRCMBR(*MODULE) +
+                          DBGVIEW(*LIST) TRUNCNBR(*NO) +
+                          TGTRLS(&TGTRLS)
+             DLTSPLF    FILE(DSPSRCR3 ) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+     /* -------------------------------- */
+     /*  Create programs                 */
+     /* -------------------------------- */
+             CRTPGM     PGM(&TOLIB/DSPSRCC) +
+                        MODULE(&TOLIB/DSPSRCC   +
+                               &TOLIB/DSPSRCR1  +
+                               &TOLIB/DSPSRCR2  +
+                               &TOLIB/DSPSRCR3) +
+                          ACTGRP(*NEW) +
+                          DETAIL(*BASIC) +
+                          TGTRLS(&TGTRLS)
+             DLTSPLF    FILE(DSPSRCC) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+     /* -------------------------------- */
+     /*  Create panel groups             */
+     /* -------------------------------- */
+             CRTPNLGRP  PNLGRP(&TOLIB/DSPSRCP) +
+                          SRCFILE(&SRCLIB/&SRCFILE) +
+                          SRCMBR(&PNLGRP)
+             DLTSPLF    FILE(DSPSRCP  ) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+     /* -------------------------------- */
+     /*  Create commands                 */
+     /* -------------------------------- */
+             CRTCMD     CMD(&TOLIB/DSPSRC) PGM(&TOLIB/DSPSRCC) +
+                          SRCFILE(&SRCLIB/&SRCFILE) +
+                          SRCMBR(&CMD) +
+                          HLPPNLGRP(&TOLIB/DSPSRCP) HLPID(DSPSRC)
+             DLTSPLF    FILE(&CMD     ) JOB(*) SPLNBR(*LAST)
+             MONMSG     MSGID(CPF0000)
+
+     /* -------------------------------- */
+     /*  Delete obsolete objects         */
+     /* -------------------------------- */
+             DLTMOD     MODULE(&TOLIB/DSPSRCC)
+             DLTMOD     MODULE(&TOLIB/DSPSRCR1)
+             DLTMOD     MODULE(&TOLIB/DSPSRCR2)
+             DLTMOD     MODULE(&TOLIB/DSPSRCR3)
+
+             ENDPGM
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing COPYRIGHT  type RPGLE - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "COPYRIGHT "
+mbrtype =  "RPGLE     "
+mbrtext =  "Copyright information                             "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+      /if not defined(COPYRIGHT_DSPEC)
+     H COPYRIGHT('V1.3 - 09.02.2017 - mailto: thomas.raddatz@tools400.de')
+      /eof
+      /endif
+     D DSPSRC_VERSION...
+     D                 C                   '1.3'
+     D DSPSRC_DATE...
+     D                 C                   '09.02.2017'
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCC  type CLLE - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCC   "
+mbrtype =  "CLLE      "
+mbrtext =  "Display Source Code - CPP                         "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+/* =================================================================== */
+/*                                                                     */
+/*  Kurzdokumentation :                                                */
+/*                                                                     */
+/*  Bereich . . . : DSPSRC                                             */
+/*  Objekt  . . . : DSPSRCC                                            */
+/*  Beschreibung  : Tool: DSPSRC     (Display Source Code)             */
+/*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      */
+/*  Datum . . . . : 25.07.2001                                         */
+/*                                                                     */
+/* =================================================================== */
+/*                                                                     */
+/*  This software is free software, you can redistribute it and/or     */
+/*  modify it under the terms of the GNU General Public License (GPL)  */
+/*  as published by the Free Software Foundation.                      */
+/*                                                                     */
+/*  See GNU General Public License for details.                        */
+/*          http://www.opensource.org                                  */
+/*          http://www.opensource.org/licenses/gpl-license.html        */
+/*                                                                     */
+/* =================================================================== */
+/*  History:                                                           */
+/*                                                                     */
+/*  Datum       Name          Änderung                                 */
+/*  ----------  ------------  ---------------------------------------  */
+/*                                                                     */
+/* =================================================================== */
+/* >>PRE-COMPILER<<                                                    */
+/*   >>CRTCMD<< CRTCLMOD     MODULE(&LI/&OB) +                         */
+/*                           SRCFILE(&SL/&SF) +                        */
+/*                           SRCMBR(&SM);                              */
+/*   >>COMPILE<<                                                       */
+/*     >>PARM<< DBGVIEW(*LIST);                                        */
+/*     >>PARM<< OPTION(*EVENTF);                                       */
+/*   >>END-COMPILE<<                                                   */
+/*   >>EXECUTE<<                                                       */
+/*   >>CMD<<    CRTPGM       PGM(&LI/DSPSRCC   )  +                    */
+/*                           MODULE(&LI/DSPSRCR1  +                    */
+/*                                  &LI/DSPSRCR2  +                    */
+/*                                  &LI/DSPSRCR3) +                    */
+/*                           ENTMOD(&LI/DSPSRCC)  +                    */
+/*                           ACTGRP(*NEW) +                            */
+/*                           DETAIL(*BASIC);                           */
+/* >>END-PRE-COMPILER<<                                                */
+/* =================================================================== */
+/*                                                                     */
+/*  Bei einer Erweiterung des Parameters OBJTYPE, bitte auch im        */
+/*  CL-Programm die Variable &TYPAVAIL entsprechend ändern.            */
+/*  Max. sind 10 Typen möglich. Danach muß die auch die Länge          */
+/*  von &TYPAVAIL sowie die Abfrage auf 100 geändert werden.           */
+/*                                                                     */
+/* =================================================================== */
+             PGM        PARM(&OBNMLB  +
+                             &OBJTYPE +
+                             &DSPMDL  )
+
+             DCL        VAR(&OBNMLB  ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&OBJTYPE ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DSPMDL  ) TYPE(*CHAR) LEN( 1)
+
+             DCL        VAR(&PGMI0100  ) TYPE(*CHAR) LEN(161)
+             DCL        VAR(&PGMILEN   ) TYPE(*CHAR) LEN(  4)
+             DCL        VAR(&PGMIFMT   ) TYPE(*CHAR) LEN(  8)
+             DCL        VAR(&PGMINAME  ) TYPE(*CHAR) LEN( 20)
+             DCL        VAR(&PGMIPGMTYP) TYPE(*CHAR) LEN(  1)
+             DCL        VAR(&APIERROR  ) TYPE(*CHAR) LEN(  8)
+
+             DCL        VAR(&OBNM    ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBLB    ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&QSRC    ) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SRCF    ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCL    ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SRCM    ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RCD     ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STRPOS  ) TYPE(*DEC ) LEN(5 0)
+             DCL        VAR(&LENAVAIL) TYPE(*DEC ) LEN(5 0) +
+                        VALUE(100)
+             DCL        VAR(&TYPAVAIL) TYPE(*CHAR) LEN(100) +
+                        VALUE('*CMD      +
+                               *FILE     +
+                               *MODULE   +
+                               *PGM      +
+                               *SRVPGM   +
+                               *TBL      ')
+
+/* Fehlerbehandlung     */
+             DCL        VAR(&ERROR)      TYPE(*LGL) +
+                          VALUE('0')
+             DCL        VAR(&TRUE)       TYPE(*LGL) +
+                          VALUE('1')
+             DCL        VAR(&FALSE)      TYPE(*LGL) +
+                          VALUE('0')
+             DCL        VAR(&ERRMSGKEY)  TYPE(*CHAR) LEN(4)
+
+             DCL        VAR(&ERRMSGTYP)  TYPE(*CHAR) LEN(10) +
+                          VALUE('*DIAG')
+             DCL        VAR(&ERRNBRTYP)  TYPE(*CHAR) LEN(4) +
+                          VALUE(X'00000001')
+             DCL        VAR(&ERRPGMMSGQ) TYPE(*CHAR) LEN(10) +
+                          VALUE('*')
+             DCL        VAR(&ERRSTKCTR)  TYPE(*CHAR) LEN(4) +
+                          VALUE(X'00000001')
+             DCL        VAR(&ERRCODE  )  TYPE(*CHAR) LEN(4) +
+                          VALUE(X'00000000')
+
+/* Sende alle Fehler zur Error Handling Routine */
+             MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ERROR))
+
+             CHGVAR     VAR(&ERROR    ) VALUE(&FALSE)
+
+ /* -------------------------------------------------------------- */
+ /*  Los geht's                                                    */
+ /* -------------------------------------------------------------- */
+
+             CHGVAR     VAR(&OBNM) VALUE(%SST(&OBNMLB 1 10))
+             CHGVAR     VAR(&OBLB) VALUE(%SST(&OBNMLB 11 10))
+
+ /* Objekttyp ist *SERACH     */
+             IF         COND(&OBJTYPE *EQ *SEARCH) THEN(DO)
+              CHGVAR     VAR(&STRPOS) VALUE(1)
+ SearchLoop:
+              CHGVAR     VAR(&OBJTYPE) +
+                         VALUE(%SST(&TYPAVAIL &STRPOS 10))
+              CHKOBJ     OBJ(&OBLB/&OBNM) OBJTYPE(&OBJTYPE)
+              MONMSG     MSGID(CPF0000) EXEC(DO)
+               CHGVAR     VAR(&STRPOS) VALUE(&STRPOS +10)
+               IF         COND(&STRPOS *LE &LENAVAIL) THEN(DO)
+                GOTO       CMDLBL(SearchLoop)
+               ENDDO
+               ELSE       CMD(DO)
+                SNDPGMMSG  MSGID(CPF9897) MSGF(*LIBL/QCPFMSG) +
+                           MSGDTA('Objekt' *BCAT &OBNM *BCAT 'vom Typ +
+                           *SEARCH nicht gefunden.') TOPGMQ(*PRV +
+                           (*)) MSGTYPE(*ESCAPE)
+               ENDDO
+              ENDDO
+
+             ENDDO
+             ELSE       CMD(DO)
+ /* Objekttyp wurde angegeben */
+             ENDDO
+
+             RTVOBJD    OBJ(&OBLB/&OBNM) OBJTYPE(&OBJTYPE) +
+                          SRCF(&SRCF) +
+                          SRCFLIB(&SRCL) SRCMBR(&SRCM)
+
+             CHGVAR     VAR(&PGMIPGMTYP) VALUE(' ')
+
+             IF         COND(&OBJTYPE *EQ '*PGM') THEN(DO)
+               CHGVAR     VAR(&PGMI0100)           VALUE(' ')
+               CHGVAR     VAR(%BIN(&PGMILEN 1 4))  VALUE(161)
+               CHGVAR     VAR(&PGMIFMT )           VALUE('PGMI0100')
+               CHGVAR     VAR(&PGMINAME)           VALUE(&OBNM *CAT &OBLB)
+               CHGVAR     VAR(%BIN(&APIERROR 1 4)) VALUE(  0)
+               CHGVAR     VAR(%BIN(&APIERROR 5 4)) VALUE(  0)
+
+               CALL       PGM(QCLRPGMI) PARM(&PGMI0100 +
+                                             &PGMILEN  +
+                                             &PGMIFMT  +
+                                             &PGMINAME +
+                                             &APIERROR )
+
+               /* ------------------------------------- */
+               /*  Type of program:                     */
+               /*    " " - OPM program                  */
+               /*    "B" - ILE program                  */
+               /* ------------------------------------- */
+               CHGVAR     VAR(&PGMIPGMTYP) VALUE(%SST(&PGMI0100 161 1))
+             ENDDO
+
+             IF         COND(&OBJTYPE *EQ '*SRVPGM') THEN(DO)
+               CHGVAR     VAR(&PGMIPGMTYP) VALUE('B')
+             ENDDO
+
+             IF         COND(&PGMIPGMTYP *EQ 'B') THEN(DO)
+              CALLPRC    PRC(DSPSRCR2) PARM(&OBNMLB  +
+                                            &OBJTYPE +
+                                            &DSPMDL  +
+                                            &QSRC    +
+                                            &SRCM    +
+                                            &RCD)
+              IF         COND(&RCD *EQ ' ') THEN(DO)
+               CHGVAR     VAR(&SRCF) VALUE(%SST(&QSRC   1 10))
+               CHGVAR     VAR(&SRCL) VALUE(%SST(&QSRC   11 10))
+              ENDDO
+              ELSE       CMD(DO)
+               /* Abbruch durch Benutzer */
+               GOTO       CMDLBL(ENDE)
+              ENDDO
+             ENDDO
+
+             CHKOBJ     OBJ(&SRCL/&SRCF) OBJTYPE(*FILE) MBR(&SRCM) +
+                          AUT(*USE)
+             MONMSG     MSGID(CPF0000) EXEC(DO)
+              SNDPGMMSG  MSG('Quellenteildatei' *BCAT &SRCM *TCAT ', +
+                         Datei' *BCAT &SRCF *TCAT ', Bibliothek' +
+                         *BCAT &SRCL *BCAT 'nicht gefunden.')
+              GOTO       CMDLBL(ENDE)
+             ENDDO
+
+             STRSEU     SRCFILE(&SRCL/&SRCF) SRCMBR(&SRCM) OPTION(5)
+
+ /* -------------------------------------------------------------- */
+ /*  Programm beenden                                              */
+ /* -------------------------------------------------------------- */
+
+ENDE:
+             DLTOVR     FILE(*ALL)
+             MONMSG     MSGID(CPF0000)
+
+             RCLRSC     LVL(*)
+
+/* -------------------------------------------------------------- */
+/*    Fehler aufgetreten ?                                        */
+/* -------------------------------------------------------------- */
+
+             IF         COND(&ERROR) THEN(DO)
+               /* Sende letzte *ESCAPE nochmals   */
+               CALL       PGM(QMHRSNEM) PARM(&ERRMSGKEY &ERRCODE)
+               MONMSG     MSGID(CPF0000)
+             ENDDO
+
+             RETURN
+
+/* ---------------- */
+/* Nachrichten      */
+/* weiterreichen    */
+/* ---------------- */
+
+ ERROR:
+             IF         COND(&ERROR) THEN(GOTO CMDLBL(ENDE))
+             ELSE       CHGVAR     VAR(&ERROR) VALUE(&TRUE)
+
+/* Verschiebe alle *DIAG Nachrichten zur             */
+/* vorangegangenen Programmwarteschlange             */
+             CALL       PGM(QMHMOVPM) PARM(&ERRMSGKEY &ERRMSGTYP +
+                          &ERRNBRTYP &ERRPGMMSGQ &ERRSTKCTR &ERRCODE)
+
+             GOTO       CMDLBL(ENDE)
+
+             ENDPGM
+
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCDE  type DSPF - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCDE  "
+mbrtype =  "DSPF      "
+mbrtext =  "Display Source Code - Eng                         "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+      * =================================================================== *
+      *                                                                     *
+      *  Kurzdokumentation :                                                *
+      *                                                                     *
+      *  Bereich . . . : DSPSRC                                             *
+      *  Objekt  . . . : DSPSRCDE                                           *
+      *  Beschreibung  : Tool: DSPSRC     (Display Source Code) Eng         *
+      *  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+      *  Datum . . . . : 03.06.2002                                         *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  This software is free software, you can redistribute it and/or     *
+      *  modify it under the terms of the GNU General Public License (GPL)  *
+      *  as published by the Free Software Foundation.                      *
+      *                                                                     *
+      *  See GNU General Public License for details.                        *
+      *          http://www.opensource.org                                  *
+      *          http://www.opensource.org/licenses/gpl-license.html        *
+      *                                                                     *
+      *=====================================================================*
+      *  History:                                                           *
+      *                                                                     *
+      *  Datum       Name          Änderung                                 *
+      *  ----------  ------------  ---------------------------------------  *
+      *                                                                     *
+      * =================================================================== *
+      * >>PRE-COMPILER<<                                                    *
+      *                                                                     *
+      *   >>CRTCMD<< CRTDSPF      FILE(&LI/DSPSRCD) +                       *
+      *                           SRCFILE(&SL/&SF) +                        *
+      *                           SRCMBR(&SM);                              *
+      *                                                                     *
+      *   >>COMPILE<<                                                       *
+      *   >>END-COMPILE<<                                                   *
+      *                                                                     *
+      *   >>EXECUTE<<                                                       *
+      *                                                                     *
+      * >>END-PRE-COMPILER<<                                                *
+      * =================================================================== *
+      *%%EC
+     A                                      DSPSIZ(24 80 *DS3                  -
+     A                                             27 132 *DS4)
+     A                                      PRINT
+      *
+      *-------------------------------------*
+     A          R PBSFL                     SFL
+     A  83                                  SFLNXTCHG
+     A            SFPAU          1   B  5  2
+     A            $$MDNM        10   O  5  5
+     A            $$MDLB        10   O  5 17
+     A            $$SRCF        10   O  5 30
+     A            $$SRCL        10   O  5 42
+     A            $$SRCM        10   O  5 54
+      *
+      *-------------------------------------*
+     A          R PBCTL                     SFLCTL(PBSFL)
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+     A  *DS3                                SFLSIZ(0011)
+     A  *DS4                                SFLSIZ(0011)
+     A  *DS3                                SFLPAG(0010)
+     A  *DS4                                SFLPAG(0010)
+     A  *DS3                                WINDOW(PBBOT)
+     A  *DS4                                WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+     A  80                                  SFLDSP
+     A  82                                  SFLDSPCTL
+     A N80                                  SFLCLR
+     A  81                                  SFLEND(*MORE)
+     A            SFSANR         4S 0H      SFLRCDNBR(CURSOR)
+     A                                  2 25'Select ILE Module'
+     A                                      COLOR(WHT)
+     A                                      DSPATR(UL)
+     A                                  4  2'A'
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4  5'Module      Library   '
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4 29'Source file  Library     Member   -
+     A                                       '
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+      *
+      *-------------------------------------*
+     A          R PBBOT
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+     A  *DS3                                WINDOW(2 2 18 64)
+     A  *DS4                                WINDOW(2 2 18 64)
+     A                                      WDWBORDER((*DSPATR RI) (*CHAR '    -
+     A                                          '))
+     A                                 16  2'                                  -
+     A                                                                  '
+     A                                      DSPATR(UL)
+     A                                 17  2'F3/F12=Exit'
+     A                                 17 17'F5=Refresh'
+      *
+      *-------------------------------------*
+     A          R PBLEER
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+     A  *DS3                                WINDOW(PBBOT)
+     A  *DS4                                WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                  8  8'(No modules found)'
+      *
+      *-------------------------------------*
+      *  RMVWDW ZUM LÖSCHEN DES WINDOWS
+     A          R RMVWDW                    CLRL(*NO) OVERLAY FRCDTA
+      *
+      *-------------------------------------*
+      *  DER DUMMY SATZ MUSS VORHANDEN SEIN,
+      *  AUCH WENN KEIN ZUGRIFF AUF IHN ERFOLGT !!
+     A          R DUMMY                     ASSUME
+     A                                 11  1' '
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCDG  type DSPF - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCDG  "
+mbrtype =  "DSPF      "
+mbrtext =  "Display Source Code - Ger                         "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+      * =================================================================== *
+      *                                                                     *
+      *  Kurzdokumentation :                                                *
+      *                                                                     *
+      *  Bereich . . . : DSPSRC                                             *
+      *  Objekt  . . . : DSPSRCDG                                           *
+      *  Beschreibung  : Tool: DSPSRC     (Display Source Code) Ger         *
+      *  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+      *  Datum . . . . : 25.07.2001                                         *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  This software is free software, you can redistribute it and/or     *
+      *  modify it under the terms of the GNU General Public License (GPL)  *
+      *  as published by the Free Software Foundation.                      *
+      *                                                                     *
+      *  See GNU General Public License for details.                        *
+      *          http://www.opensource.org                                  *
+      *          http://www.opensource.org/licenses/gpl-license.html        *
+      *                                                                     *
+      *=====================================================================*
+      *  History:                                                           *
+      *                                                                     *
+      *  Datum       Name          Änderung                                 *
+      *  ----------  ------------  ---------------------------------------  *
+      *  01.03.2007  Th.Raddatz    Added 'DSPATR(PC)' to SFPAU.             *
+      *                                                                     *
+      * =================================================================== *
+      * >>PRE-COMPILER<<                                                    *
+      *                                                                     *
+      *   >>CRTCMD<< CRTDSPF      FILE(&LI/DSPSRCD) +                       *
+      *                           SRCFILE(&SL/&SF) +                        *
+      *                           SRCMBR(&SM);                              *
+      *                                                                     *
+      *   >>COMPILE<<                                                       *
+      *   >>END-COMPILE<<                                                   *
+      *                                                                     *
+      *   >>EXECUTE<<                                                       *
+      *                                                                     *
+      * >>END-PRE-COMPILER<<                                                *
+      * =================================================================== *
+     A                                      DSPSIZ(24  80 *DS3 +
+     A                                             27 132 *DS4)
+     A                                      PRINT
+      *
+      *-------------------------------------*
+     A          R PBSFL                     SFL
+     A  83                                  SFLNXTCHG
+     A            SFPAU          1   B  5  2
+     A  84                                  DSPATR(PC)
+     A            $$MDNM        10   O  5  5
+     A            $$MDLB        10   O  5 17
+     A            $$SRCF        10   O  5 30
+     A            $$SRCL        10   O  5 42
+     A            $$SRCM        10   O  5 54
+      *
+      *-------------------------------------*
+     A          R PBCTL                     SFLCTL(PBSFL)
+     A                                      SFLSIZ(0011)
+     A                                      SFLPAG(0010)
+     A                                      WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+     A  80                                  SFLDSP
+     A  82                                  SFLDSPCTL
+     A N80                                  SFLCLR
+     A  81                                  SFLEND(*MORE)
+     A            SFSANR         4S 0H      SFLRCDNBR(CURSOR)
+     A                                  2 25'Auswahl ILE-Modul'
+     A                                      COLOR(WHT)
+     A                                      DSPATR(UL)
+     A                                  4  2'A'
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4  5'Modul       Biblitohek'
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4 29'Sourcedatei  Biblitohek  Teildatei-
+     A                                       '
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+      *
+      *-------------------------------------*
+     A          R PBBOT
+     A                                      WINDOW(2 2 18 64)
+     A                                      WDWBORDER((*DSPATR RI) (*CHAR '    -
+     A                                          '))
+     A                                 16  2'                                  -
+     A                                                                  '
+     A                                      DSPATR(UL)
+     A                                 17  2'F3/F12=zurück'
+     A                                 17 17'F5=neu aufblättern'
+      *
+      *-------------------------------------*
+     A          R PBLEER
+     A                                      WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                  8  8'(Keine Datensätze vorhanden)'
+      *
+      *-------------------------------------*
+      *  RMVWDW ZUM LÖSCHEN DES WINDOWS
+     A          R RMVWDW                    CLRL(*NO) OVERLAY FRCDTA
+      *
+      *-------------------------------------*
+      *  DER DUMMY SATZ MUSS VORHANDEN SEIN,
+      *  AUCH WENN KEIN ZUGRIFF AUF IHN ERFOLGT !!
+     A          R DUMMY                     ASSUME
+     A                                 11  1' '
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCE  type CMD - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCE   "
+mbrtype =  "CMD       "
+mbrtext =  "Display Source Code - Eng                         "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+/* =================================================================== */
+/*                                                                     */
+/*  Kurzdokumentation :                                                */
+/*                                                                     */
+/*  Bereich . . . : DSPSRC                                             */
+/*  Objekt  . . . : DSPSRCE                                            */
+/*  Beschreibung  : Tool: DSPSRC     (Display Source Code) Eng         */
+/*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      */
+/*  Datum . . . . : 03.06.2002                                         */
+/*                                                                     */
+/* =================================================================== */
+/*                                                                     */
+/*  This software is free software, you can redistribute it and/or     */
+/*  modify it under the terms of the GNU General Public License (GPL)  */
+/*  as published by the Free Software Foundation.                      */
+/*                                                                     */
+/*  See GNU General Public License for details.                        */
+/*          http://www.opensource.org                                  */
+/*          http://www.opensource.org/licenses/gpl-license.html        */
+/*                                                                     */
+/* =================================================================== */
+/*  History:                                                           */
+/*                                                                     */
+/*  Datum       Name          Änderung                                 */
+/*  ----------  ------------  ---------------------------------------  */
+/*                                                                     */
+/* =================================================================== */
+/* >>PRE-COMPILER<<                                                    */
+/*                                                                     */
+/*   >>CRTCMD<< CRTCMD       CMD(&LI/DSPSRC) +                         */
+/*                           SRCFILE(&SL/&SF) +                        */
+/*                           SRCMBR(&SM);                              */
+/*                                                                     */
+/*   >>COMPILE<<                                                       */
+/*     >>PARM<< PGM(*LIBL/DSPSRCC);                                    */
+/*     >>PARM<< HLPPNLGRP(*LIBL/DSPSRCP);                              */
+/*     >>PARM<< HLPID(DSPSRC);                                         */
+/*   >>END-COMPILE<<                                                   */
+/*                                                                     */
+/*   >>EXECUTE<<                                                       */
+/*                                                                     */
+/* >>END-PRE-COMPILER<<                                                */
+/* =================================================================== */
+/*                                                                     */
+/*  Bei einer Erweiterung des Parameters OBJTYPE, bitte auch im        */
+/*  CL-Programm die Variable &TYPAVAIL entsprechend ändern.            */
+/*  Max. sind 10 Typen möglich. Danach muß die auch die Länge          */
+/*  von &TYPAVAIL sowie die Abfrage auf 100 geändert werden.           */
+/*                                                                     */
+/* =================================================================== */
+
+             CMD        PROMPT('Display Source Code')
+
+             PARM       KWD(OBJ) TYPE(QUAL1)     +
+                          MIN(1)                 +
+                          PROMPT('Object')
+
+             PARM       KWD(OBJTYPE) TYPE(*CHAR) +
+                          LEN(10)                +
+                          RSTD(*YES)             +
+                          DFT(*SEARCH)           +
+                          VALUES(*SEARCH         +
+                                 *CMD            +
+                                 *FILE           +
+                                 *MODULE         +
+                                 *PGM            +
+                                 *SRVPGM         +
+                                 *TBL            +
+                                 )               +
+                          PROMPT('Object type')
+
+             PARM       KWD(DSPMOD) TYPE(*CHAR)  +
+                          LEN(1)                 +
+                          RSTD(*YES)             +
+                          DFT(*NO)               +
+                          SPCVAL((*YES 1)        +
+                                 (*NO  0))       +
+                          PMTCTL(*PMTRQS)        +
+                          PROMPT('Display ILE module list')
+
+ QUAL1:      QUAL       TYPE(*NAME) LEN(10) MIN(1)
+             QUAL       TYPE(*NAME) LEN(10) DFT(*LIBL) +
+                          SPCVAL((*LIBL) (*CURLIB)) +
+                          PROMPT('Library')
+
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCG  type CMD - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCG   "
+mbrtype =  "CMD       "
+mbrtext =  "Display Source Code - Ger                         "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+/* =================================================================== */
+/*                                                                     */
+/*  Kurzdokumentation :                                                */
+/*                                                                     */
+/*  Bereich . . . : DSPSRC                                             */
+/*  Objekt  . . . : DSPSRCG                                            */
+/*  Beschreibung  : Tool: DSPSRC     (Display Source Code) Ger         */
+/*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      */
+/*  Datum . . . . : 25.07.2001                                         */
+/*                                                                     */
+/* =================================================================== */
+/*                                                                     */
+/*  This software is free software, you can redistribute it and/or     */
+/*  modify it under the terms of the GNU General Public License (GPL)  */
+/*  as published by the Free Software Foundation.                      */
+/*                                                                     */
+/*  See GNU General Public License for details.                        */
+/*          http://www.opensource.org                                  */
+/*          http://www.opensource.org/licenses/gpl-license.html        */
+/*                                                                     */
+/* =================================================================== */
+/*  History:                                                           */
+/*                                                                     */
+/*  Datum       Name          Änderung                                 */
+/*  ----------  ------------  ---------------------------------------  */
+/*                                                                     */
+/* =================================================================== */
+/* >>PRE-COMPILER<<                                                    */
+/*                                                                     */
+/*   >>CRTCMD<< CRTCMD       CMD(&LI/DSPSRC) +                         */
+/*                           SRCFILE(&SL/&SF) +                        */
+/*                           SRCMBR(&SM);                              */
+/*                                                                     */
+/*   >>COMPILE<<                                                       */
+/*     >>PARM<< PGM(*LIBL/DSPSRCC);                                    */
+/*     >>PARM<< HLPPNLGRP(*LIBL/DSPSRCP);                              */
+/*     >>PARM<< HLPID(DSPSRC);                                         */
+/*   >>END-COMPILE<<                                                   */
+/*                                                                     */
+/*   >>EXECUTE<<                                                       */
+/*                                                                     */
+/* >>END-PRE-COMPILER<<                                                */
+/* =================================================================== */
+/*                                                                     */
+/*  Bei einer Erweiterung des Parameters OBJTYPE, bitte auch im        */
+/*  CL-Programm die Variable &TYPAVAIL entsprechend ändern.            */
+/*  Max. sind 10 Typen möglich. Danach muß die auch die Länge          */
+/*  von &TYPAVAIL sowie die Abfrage auf 100 geändert werden.           */
+/*                                                                     */
+/* =================================================================== */
+
+             CMD        PROMPT('Quellenteildatei anzeigen')
+
+             PARM       KWD(OBJ) TYPE(QUAL1)     +
+                          MIN(1)                 +
+                          PROMPT('Objekt')
+
+             PARM       KWD(OBJTYPE) TYPE(*CHAR) +
+                          LEN(10)                +
+                          RSTD(*YES)             +
+                          DFT(*SEARCH)           +
+                          VALUES(*SEARCH         +
+                                 *CMD            +
+                                 *FILE           +
+                                 *MODULE         +
+                                 *PGM            +
+                                 *SRVPGM         +
+                                 *TBL            +
+                                 )               +
+                          PROMPT('Objektart')
+
+             PARM       KWD(DSPMOD) TYPE(*CHAR)  +
+                          LEN(1)                 +
+                          RSTD(*YES)             +
+                          DFT(*NO)               +
+                          SPCVAL((*YES 1)        +
+                                 (*NO  0))       +
+                          PMTCTL(*PMTRQS)        +
+                          PROMPT('ILE-Module anzeigen')
+
+ QUAL1:      QUAL       TYPE(*NAME) LEN(10) MIN(1)
+             QUAL       TYPE(*NAME) LEN(10) DFT(*LIBL) +
+                          SPCVAL((*LIBL) (*CURLIB)) +
+                          PROMPT('Bibliothek')
+
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCPE  type PNLGRP - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCPE  "
+mbrtype =  "PNLGRP    "
+mbrtext =  "Display Source Code - Eng                         "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+.*=====================================================================*
+.*                                                                     *
+.*  Kurzdokumentation :                                                *
+.*                                                                     *
+.*  Bereich . . . : DSPSRC                                             *
+.*  Objekt  . . . : DSPSRCPE                                           *
+.*  Beschreibung  : Tool: DSPSRC     (Display Source Code) Eng         *
+.*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+.*  Datum . . . . : 03.06.2002                                         *
+.*                                                                     *
+.*=====================================================================*
+.*                                                                     *
+.*  This software is free software, you can redistribute it and/or     *
+.*  modify it under the terms of the GNU General Public License (GPL)  *
+.*  as published by the Free Software Foundation.                      *
+.*                                                                     *
+.*  See GNU General Public License for details.                        *
+.*          http://www.opensource.org                                  *
+.*          http://www.opensource.org/licenses/gpl-license.html        *
+.*                                                                     *
+.*=====================================================================*
+.*  History:                                                           *
+.*                                                                     *
+.*  Datum       Name          Änderung                                 *
+.*  ----------  ------------  ---------------------------------------  *
+.*                                                                     *
+.*=====================================================================*
+.* >>PRE-COMPILER<<                                                    *
+.*                                                                     *
+.*   >>CRTCMD<< CRTPNLGRP    PNLGRP(&LI/DSPSRCP) +                         *
+.*                           SRCFILE(&SL/&SF) +                        *
+.*                           SRCMBR(&SM);                              *
+.*                                                                     *
+.*   >>COMPILE<<                                                       *
+.*   >>END-COMPILE<<                                                   *
+.*                                                                     *
+.*   >>EXECUTE<<                                                       *
+.*                                                                     *
+.* >>END-PRE-COMPILER<<                                                *
+.*=====================================================================*
+:PNLGRP.
+.*
+:HELP name='DSPSRC/ALL'.
+:IMHELP name=DSPSRC.
+:IMHELP name='DSPSRC/OBJ       '.
+:IMHELP name='DSPSRC/OBJTYPE   '.
+:IMHELP name='DSPSRC/DSPMOD    '.
+:EHELP.
+.*--------------------------------------------------------------------
+.* Hilfetext für den Befehl
+.*--------------------------------------------------------------------
+:HELP NAME='DSPSRC'.
+Display Source Code (DSPSRC) - Help
+:P.
+The DSPSRC command is used to display the source member that
+contains the source code the object was created from.
+.*
+:P.
+In case of that an object is made of serveral modules, the DSPSRC
+command shows that list of modules. The desired module can be
+selected from the list.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort OBJ
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/OBJ       '.
+Obcekt - Help
+:XH3.Object (OBJ)
+:P.
+Specifies the name an library of the object for which the
+source member is to be displayed.
+.*
+:IMHELP name='COM/REQPARM'.
+.*
+:PARML.
+:PT.:PV.object-name:EPV.
+:PD.Specify the name of the object.
+:EPARML.
+:P.
+The possible library values are:
+:P.
+:PARML.
+:PT.:PK DEF.*LIBL:EPK.
+:PD.All libraries in the job's library list are searched
+until the first match is found.
+:PT.:PV.library-name:EPV.
+:PD.Specify the name of the library to be searched.
+:EPARML.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort OBJTYPE
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/OBJTYPE   '.
+Object type - Help
+:XH3.Object type (OBJTYPE)
+:P.
+Specifies the type of the object for which the source member is to be
+displayed. For a complete list of object types, position the cursor on
+the field for the :HP2.Object type:EHP2. (parameter OBJTYPE), and press
+F4.
+.*
+:IMHELP name='COM/OPTPARM'.
+.*
+:PARML.
+:PT.:PV.object-type:EPV.
+:PD.Specify the value for the type of object for which the
+source member is displayed.
+:EPARML.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort DSPMOD
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/DSPMOD    '.
+Display ILE module list - Help
+:XH3.Display ILE module list (DSPMOD)
+:P.
+Specifies wwhether the list of modules of a ILE program is displayed
+or not. If a ILE program only consists of one module, then by default
+the list is not displayed.
+.*
+:IMHELP name='COM/OPTPARM'.
+.*
+:PARML.
+:PT.:PK DEF.*NO:EPK.
+:PD.The module list is not displayed, if the program consists of one
+module only.
+:PT.:PV.*YES:EPV.
+:PD.The module list is displayed.
+:EPARML.
+.*
+:EHELP.
+.*
+.*====================================================================
+.*  Textbausteine, die an mehreren Stellen im Hilfetext
+.*  verwendet werden.
+.*====================================================================
+
+.*=====================================
+.*  Erforderlicher Parameter
+.*=====================================
+:HELP NAME='COM/REQPARM'.
+:P.
+This is a required parameter.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Optionaler Parameter
+.*=====================================
+:HELP NAME='COM/OPTPARM'.
+:P.
+This is an optional parameter.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Werteliste
+.*=====================================
+:HELP NAME='COM/VALUES'.
+:P.
+The possible values are:
+:EHELP.
+.*
+:EPNLGRP.
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCPG  type PNLGRP - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCPG  "
+mbrtype =  "PNLGRP    "
+mbrtext =  "Display Source Code - Ger                         "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+.*=====================================================================*
+.*                                                                     *
+.*  Kurzdokumentation :                                                *
+.*                                                                     *
+.*  Bereich . . . : DSPSRC                                             *
+.*  Objekt  . . . : DSPSRCPG                                           *
+.*  Beschreibung  : Tool: DSPSRC     (Display Source Code) Ger         *
+.*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+.*  Datum . . . . : 25.07.2001                                         *
+.*                                                                     *
+.*=====================================================================*
+.*                                                                     *
+.*  This software is free software, you can redistribute it and/or     *
+.*  modify it under the terms of the GNU General Public License (GPL)  *
+.*  as published by the Free Software Foundation.                      *
+.*                                                                     *
+.*  See GNU General Public License for details.                        *
+.*          http://www.opensource.org                                  *
+.*          http://www.opensource.org/licenses/gpl-license.html        *
+.*                                                                     *
+.*=====================================================================*
+.*  History:                                                           *
+.*                                                                     *
+.*  Datum       Name          Änderung                                 *
+.*  ----------  ------------  ---------------------------------------  *
+.*                                                                     *
+.*=====================================================================*
+.* >>PRE-COMPILER<<                                                    *
+.*                                                                     *
+.*   >>CRTCMD<< CRTPNLGRP    PNLGRP(&LI/DSPSRCP) +                         *
+.*                           SRCFILE(&SL/&SF) +                        *
+.*                           SRCMBR(&SM);                              *
+.*                                                                     *
+.*   >>COMPILE<<                                                       *
+.*   >>END-COMPILE<<                                                   *
+.*                                                                     *
+.*   >>EXECUTE<<                                                       *
+.*                                                                     *
+.* >>END-PRE-COMPILER<<                                                *
+.*=====================================================================*
+:PNLGRP.
+.*
+:HELP name='DSPSRC/ALL'.
+:IMHELP name=DSPSRC.
+:IMHELP name='DSPSRC/OBJ       '.
+:IMHELP name='DSPSRC/OBJTYPE   '.
+:IMHELP name='DSPSRC/DSPMOD    '.
+:EHELP.
+.*--------------------------------------------------------------------
+.* Hilfetext für den Befehl
+.*--------------------------------------------------------------------
+:HELP NAME='DSPSRC'.
+Quellenteildatei anzeigen (DSPSRC) - Hilfe
+:P.
+Der Befehl DSPSRC zeigt die Quellenteildatei an, aus der ein Objekt
+erstellt worden ist.
+.*
+:P.
+Bei ILE-Programmen wird die Quellenteildatei des Moduls angezeigt. Wenn
+ein ILE-Programm aus mehreren Modulen erstellt worden ist, dann wird
+eine Liste der Module angezeigt und das anzuzeigende Modul kann aus
+der Modulliste ausgewählt werden.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort OBJ
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/OBJ       '.
+Objekt - Hilfe
+:XH3.Objekt (OBJ)
+:P.
+Namen des Objekts und der Bibliothek angeben, dessen
+Quellenteildatei angezeigt werden soll.
+.*
+:IMHELP name='COM/REQPARM'.
+.*
+:PARML.
+:PT.:PV.Objektname:EPV.
+:PD.Name der Datei.
+:EPARML.
+:P.
+Gültige Bibliothekswerte sind:
+:P.
+:PARML.
+:PT.:PK DEF.*LIBL:EPK.
+:PD.Objekt wird über die Bibliotheksliste gesucht.
+:PT.:PV.Bibliothek:EPV.
+:PD.Name der Bibliothek, welche das Objekt enthält.
+:EPARML.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort OBJTYPE
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/OBJTYPE   '.
+Objektart - Hilfe
+:XH3.Objektart (OBJTYPE)
+:P.
+Gibt die Art des Objekts an. Um eine vollständige Liste der Objektarten
+zu erhalten, den Positionsanzeiger in das Feld der Bedienerführung
+:HP2.Objektart:EHP2. (Parameter OBJTYPE) bewegen und F4 drücken.
+.*
+:IMHELP name='COM/OPTPARM'.
+.*
+:PARML.
+:PT.:PV.Objektart:EPV.
+:PD.Den Wert für die Objektart angeben.
+:EPARML.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort DSPMOD
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/DSPMOD    '.
+ILE-Module anzeigen - Hilfe
+:XH3.ILE-Module anzeigen (DSPMOD)
+:P.
+Angeben, ob die Modulliste von ILE-Programmen in jedem Fall angezeigt
+werden soll. Wenn ein ILE-Programm nur aus einem Modul besteht, dann
+wird die Liste der Module normalerweise nicht angezeigt.
+.*
+:IMHELP name='COM/OPTPARM'.
+.*
+:PARML.
+:PT.:PK DEF.*NO:EPK.
+:PD.Die Modulliste wird nicht angezeigt, ausgenommen dann, wenn das
+ILE-Programm aus mehreren Modulen besteht.
+:PT.:PV.*YES:EPV.
+:PD.Die Modulliste wird in jedem Fall angezeigt.
+:EPARML.
+.*
+:EHELP.
+.*
+.*====================================================================
+.*  Textbausteine, die an mehreren Stellen im Hilfetext
+.*  verwendet werden.
+.*====================================================================
+
+.*=====================================
+.*  Erforderlicher Parameter
+.*=====================================
+:HELP NAME='COM/REQPARM'.
+:P.
+Dieser Parameter ist erforderlich.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Optionaler Parameter
+.*=====================================
+:HELP NAME='COM/OPTPARM'.
+:P.
+Dieser Parameter ist optional.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Werteliste
+.*=====================================
+:HELP NAME='COM/VALUES'.
+:P.
+Mögliche Werte sind:
+:EHELP.
+.*
+:EPNLGRP.
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCR1  type RPGLE - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCR1  "
+mbrtype =  "RPGLE     "
+mbrtext =  "Display Source Code - list program modules        "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+      *=====================================================================*
+      *                                                                     *
+      *  Kurzdokumentation :                                                *
+      *                                                                     *
+      *  Bereich . . . : DSPSRC                                             *
+      *  Objekt  . . . : DSPSRCR1                                           *
+      *  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
+      *  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+      *  Datum . . . . : 25.07.2001                                         *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  This software is free software, you can redistribute it and/or     *
+      *  modify it under the terms of the GNU General Public License (GPL)  *
+      *  as published by the Free Software Foundation.                      *
+      *                                                                     *
+      *  See GNU General Public License for details.                        *
+      *          http://www.opensource.org                                  *
+      *          http://www.opensource.org/licenses/gpl-license.html        *
+      *                                                                     *
+      *=====================================================================*
+      *  History:                                                           *
+      *                                                                     *
+      *  Datum       Name          Änderung                                 *
+      *  ----------  ------------  ---------------------------------------  *
+      *  10.01.2003  Th.Raddatz    Removed special character § from source. *
+      *                                                                     *
+      *=====================================================================*
+      * >>PRE-COMPILER<<                                                    *
+      *   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
+      *                           SRCFILE(&SL/&SF) +                        *
+      *                           SRCMBR(&SM);                              *
+      *   >>COMPILE<<                                                       *
+      *     >>PARM<< TRUNCNBR(*NO);                                         *
+      *     >>PARM<< DBGVIEW(*LIST);                                        *
+      *   >>END-COMPILE<<                                                   *
+      *   >>EXECUTE<<                                                       *
+      * >>END-PRE-COMPILER<<                                                *
+      *=====================================================================*
+      *                                                                     *
+      *  INPUT-Parameter:                                                   *
+      *  ================                                                   *
+      *                                                                     *
+      *  XQPGM   - Qualifizierte Programmname                               *
+      *             1 - 10:  pgm                                            *
+      *            11 - 20:  library                                        *
+      *                        *ALL        Alle Bibliotheken auf dem System *
+      *                        *ALLUSR     Alle nicht-IBM Bibliotheken      *
+      *                        *CURLIB     Aktuelle Bibliothek des Jobs     *
+      *                        *LIBL       kompl. Bibliotheksliste          *
+      *                        *USRLIBL    Benutzerteil der Bibl.Liste      *
+      *                                                                     *
+      *  XCTRL   - Funktionscode                                            *
+      *              1 - erstellen Liste                   CREATE           *
+      *              5 - lesen nächsten Eintrag            READ             *
+      *              4 - löschen Liste                     DELETE           *
+      *                                                                     *
+      *  OUTPUT-Parameter:                                                  *
+      *  =================                                                  *
+      *                                                                     *
+      *  XCNT    - Anzahl noch verfügbarer Einträge                         *
+      *  XDATA   - Eintragsdaten                                            *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  Typische Aufrufreihenfolge                                         *
+      *                                                                     *
+      *        A_PGM   - Funktion (1)    erstellen Liste                    *
+      *                                                                     *
+      *  XCNT  DOWGT *ZEROS                                                 *
+      *        A_PGM   - Funktion (5)    lesen nächsten Eintrag             *
+      *        ENDDO                                                        *
+      *                                                                     *
+      *        A_PGM   - Funktion (4)    löschen Liste                      *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  Datenstruktur  PGML0100:                                           *
+      *                                                                     *
+      *   P1PGM  - Program name used                                        *
+      *   P1LIB  - Program library name used                                *
+      *            *ALL, *ALLUSR, *CURLIB, *LIBL, *USRLIBL                  *
+      *   P1MDNM - Bound module name                                        *
+      *   P1MDLB - Bound module library name                                *
+      *   P1SRCF - Source file name                                         *
+      *   P1SRCL - Source library name                                      *
+      *   P1SRCM - Source member name                                       *
+      *   P1MATR - Module attribute                                         *
+      *   P1MCDT - Module creation date and time                            *
+      *   P1SUDT - Source updated date and time                             *
+      *   P1STNM - Sort sequence table name                                 *
+      *   P1STLB - Sort sequence table library name                         *
+      *   P1LANG - Language identifier                                      *
+      *   P1OPT  - Optimization level                                       *
+      *   P1MOPT - Maximum opimization level                                *
+      *   P1DBG  - Debug data                                               *
+      *   P1CRLS - Release module created on                                *
+      *   P1FRLS - Release module created for                               *
+      *   P1RES1 - Reserved 1                                               *
+      *   P1USRM - User modified                                            *
+      *   P1LICP - Licensed program                                         *
+      *   P1PTF  - PTF number                                               *
+      *   P1APAR - APAR ID                                                  *
+      *   P1CDTA - Creation data                                            *
+      *   P1CCSI - CCSID                                                    *
+      *   P1OCLV - Objekt control level                                     *
+      *   P1PFRC - Enable performance collection                            *
+      *   P1PDTA - Profiling data                                           *
+      *   P1RES2 - Reserved 2                                               *
+      *   S1NPRC - Number of Procedures                                     *
+      *   S1NPBR - Number of procedures block reordered                     *
+      *   S1NPBM - Number of procedures block-order measured                *
+      *   P1RES3 - Reserved 3                                               *
+      *   P1NSQL - Number of SQL statements                                 *
+      *   P1RDB  - Relational database                                      *
+      *   P1CMT  - Commitment control                                       *
+      *   P1ALWD - Allow copy of date                                       *
+      *   P1CLSC - Close SQL cursor                                         *
+      *   P1NMCV - Naming convention                                        *
+      *   P1DTFM - Date format                                              *
+      *   P1DTSP - Date seperator                                           *
+      *   P1TMFM - Time format                                              *
+      *   P1TMSP - Time seperator                                           *
+      *   P1DLYP - Delay PREPARE                                            *
+      *   P1ALWB - Allow blocking                                           *
+      *   P1DCNM - Default collection name                                  *
+      *   P1SPNM - SQL package name                                         *
+      *   P1SPLB - SQL package library name                                 *
+      *   P1DUSR - Dynamic user profile                                     *
+      *   P1SSNM - SQL sort sequence table name                             *
+      *   P1SSLB - SQL sort sequence table library name                     *
+      *   P1SLID - SQL language identifier                                  *
+      *   P1CNMT - Connection method                                        *
+      *                                                                     *
+      *=====================================================================*
+      /COPY QDSPSRC,H_SPEC
+      /COPY QDSPSRC,COPYRIGHT
+      *===============================================================
+      *
+      *  Eintragsdaten der *ENTRY-Liste
+     D XDATA           DS           512
+      *
+      *  Felder für List API
+     D                 DS
+     D  PLQPGM                 1     20
+     D  PLPGM                  1     10
+     D  PLLIB                 11     20
+     D  PLFMT                 21     28
+      *
+      *  Datenstruktur für der Rückgabewert des List API.
+      *  PGML0100 - ILE program module (*MODULE) information.
+     D PL0100          DS
+     D  P1PGME                 1     10
+     D  P1LIB                 11     20
+     D  P1MDNM                21     30
+     D  P1MDLB                31     40
+     D  P1SRCF                41     50
+     D  P1SRCL                51     60
+     D  P1SRCM                61     70
+     D  P1MATR                71     80
+     D  P1MCDT                81     93
+     D  P1SUDT                94    106
+     D  P1STNM               107    116
+     D  P1STLB               117    126
+     D  P1LANG               127    136
+     D  P1OPT                137    140B 0
+     D  P1MOPT               141    144B 0
+     D  P1DBG                145    154
+     D  P1CRLS               155    160
+     D  P1FRLS               161    166
+     D  P1RES1               167    186
+     D  P1USRM               187    187
+     D  P1LICP               188    200
+     D  P1PTF                201    205
+     D  P1APAR               206    211
+     D  P1CDTA               212    212
+     D  P1CCSI               213    216
+     D  P1OCLV               217    224
+     D  P1PFRC               225    225
+     D  S1PDTA               226    235
+     D  P1RES2               236    236
+     D  S1NPRC               237    240B 0
+     D  S1NPBR               241    244B 0
+     D  S1NPBM               245    248B 0
+     D  S1RES3               249    324
+     D  P1NSQL               325    328
+     D  P1RDB                329    346
+     D  P1CMT                347    356
+     D  P1ALWD               357    366
+     D  P1CLSC               367    376
+     D  P1NMCV               377    386
+     D  P1DTFM               387    396
+     D  P1DTSP               397    397
+     D  P1TMFM               398    407
+     D  P1TMSP               408    408
+     D  P1DLYP               409    418
+     D  P1ALWB               419    428
+     D  P1DCNM               429    438
+     D  P1SPNM               439    448
+     D  P1SPLB               449    458
+     D  P1DUSR               459    468
+     D  P1SSNM               469    478
+     D  P1SSLB               479    488
+     D  P1SLID               489    498
+     D  P1CNMT               499    508
+      *
+      *  Länge der Datenstruktur
+     D cDTLN           C                   CONST(%SIZE(PL0100))
+      *
+      *===============================================================*
+      *  Erforderliche Änderungen für anderes List API                *
+      *    - *NONE                                                    *
+      *===============================================================*
+      *
+      *  API Fehlerdatenstruktur
+     D ERRCOD          DS
+     D  ERRPRV                 1      4B 0 INZ
+     D  ERRAVL                 5      8B 0 INZ
+     D  ERRID                  9     15    INZ
+     D  ERRRSV                16     16    INZ
+     D  ERRDTA                17     32    INZ
+      *
+      *  Felder für QUSRTVUS
+     D                 DS
+     D  USDTLN                 1      4B 0 INZ
+     D  USSPOS                 5      8B 0 INZ
+      *
+      *  Felder für QUSCRTUS
+     D                 DS
+     D  USFNME                 1     20
+     D  USNAME                 1     10    INZ
+     D  USLIB                 11     20    INZ
+     D  USATTR                21     30    INZ
+     D  USSIZE                31     34B 0 INZ
+     D  USINIT                35     35    INZ
+     D  USAUTH                36     45    INZ
+     D  USDESC                46     95    INZ
+      *
+      *  Felder für Generic List Header
+     D US#OFS          DS
+     D  OFFSET                 1      4B 0 INZ
+     D  RECRDS                 9     12B 0 INZ
+     D  RSIZE                 13     16B 0 INZ
+      *
+      ********************************************************************
+      *           Hauptsteuerung                                         *
+      *------------------------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API                   *
+      *    - *ENTRY liste: Länge XDATA                                   *
+      ********************************************************************
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    XQPGM            20
+     C                   PARM                    XCTRL             1
+      *
+     C                   PARM                    XCNT             10 0
+     C                   PARM                    XDATA                          Length 512
+      *
+      *---------------------------------------------------*
+      *
+     C                   SELECT
+      *  erstellen Liste
+     C     XCTRL         WHENEQ    '1'
+     C                   EXSR      CREATE
+      *  löschen Liste
+     C     XCTRL         WHENEQ    '4'
+     C                   EXSR      DELETE
+      *  lesen nächsten Eintrag
+     C     XCTRL         WHENEQ    '5'
+     C                   EXSR      READ
+     C                   ENDSL
+      *
+      *---------------------------------------------------*
+      *  Programmende
+      *
+     C     ENDE          TAG
+      *
+     C                   RETURN
+      *
+      *====================================================*
+      *  CREATE --  Erstellen USRSPC und Liste             *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - evtl. Initialgröße des USRSPC                 *
+      *    - API Aufruf für Liste                          *
+      *====================================================*
+      *
+     C     CREATE        BEGSR
+      *
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   CLEAR                   PL0100
+      *
+     C                   EXSR      CHKOBJ
+      *
+      *  erstellen USRSPC
+     C     *IN99         IFEQ      '1'
+     C                   CALL      'QUSCRTUS'
+     C                   PARM                    USFNME
+     C                   PARM      'TEMP'        USATTR
+     C                   PARM      2048          USSIZE
+     C                   PARM      ' '           USINIT
+     C                   PARM      '*ALL'        USAUTH
+     C                   PARM      ' '           USDESC
+     C                   ENDIF
+      *
+      *  erstellen Liste
+     C                   MOVEL     'PGML0100'    PLFMT                          format
+     C                   MOVEL     XQPGM         PLQPGM                         qualf.pgm name
+     C                   Z-ADD     32            ERRPRV                         len provided
+      *
+     C                   CALL      'QBNLPGMI'
+     C                   PARM                    USFNME
+     C                   PARM                    PLFMT
+     C                   PARM                    PLQPGM
+     C                   PARM                    ERRCOD
+      *
+     C     ERRAVL        IFNE      *ZEROS
+      *  Fehler aufgetreten!
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   ELSE
+      *  ermitteln Offset zu den Eintragsdaten
+     C                   Z-ADD     125           USDTLN
+     C                   Z-ADD     16            USSPOS
+      *
+     C                   CALL      'QUSRTVUS'
+     C                   PARM                    USFNME
+     C                   PARM                    USDTLN
+     C                   PARM                    USSPOS
+     C                   PARM                    US#OFS
+      *
+     C                   ADD       1             OFFSET
+     C                   ENDIF
+      *
+     C                   Z-ADD     RECRDS        XCNT
+     C                   MOVEL(P)  PL0100        XDATA
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  DELETE --  Löschen USRSPC                         *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - *NONE                                         *
+      *====================================================*
+      *
+     C     DELETE        BEGSR
+      *
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   CLEAR                   PL0100
+      *
+     C                   EXSR      CHKOBJ
+      *
+     C     *IN99         IFEQ      '0'
+      *
+     C                   MOVEL(P)  'DLTUSR'      YCMD
+     C                   CAT       'SPC':0       YCMD
+     C                   CAT       'USR':1       YCMD
+     C                   CAT       'SPC(':0      YCMD
+     C                   CAT       USLIB:0       YCMD
+     C                   CAT       '/':0         YCMD
+     C                   CAT       USNAME:0      YCMD
+     C                   CAT       ')':0         YCMD
+      *
+     C                   CALL      'QCMDEXC'                            99
+     C                   PARM                    YCMD
+     C                   PARM      256           YCMDL
+      *
+     C                   ENDIF
+      *
+     C                   Z-ADD     RECRDS        XCNT
+     C                   MOVEL(P)  PL0100        XDATA
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  READ   --  Lesen nächsten Eintrag                 *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - *NONE                                         *
+      *====================================================*
+      *
+     C     READ          BEGSR
+      *
+     C                   CLEAR                   PL0100
+      *
+     C     RECRDS        IFLE      *ZEROS
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   ELSE
+      *
+     C                   Z-ADD     cDTLN         USDTLN
+     C                   Z-ADD     OFFSET        USSPOS
+      *
+     C                   CALL      'QUSRTVUS'                           99
+     C                   PARM                    USFNME
+     C                   PARM                    USSPOS
+     C                   PARM                    USDTLN
+     C                   PARM                    PL0100
+      *
+     C     *IN99         IFEQ      '0'
+     C                   SUB       1             RECRDS
+     C                   ADD       RSIZE         OFFSET
+     C                   ELSE
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   Z-ADD     RECRDS        XCNT
+     C                   MOVEL(P)  PL0100        XDATA
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  CHKOBJ --  Prüfen USRSPC                          *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - *NONE                                         *
+      *====================================================*
+      *
+     C     CHKOBJ        BEGSR
+      *
+     C                   MOVEL(P)  'CHKOBJ'      YCMD
+     C                   CAT       'OBJ(':1      YCMD
+     C                   CAT       USLIB:0       YCMD
+     C                   CAT       '/':0         YCMD
+     C                   CAT       USNAME:0      YCMD
+     C                   CAT       ')':0         YCMD
+     C                   CAT       'OBJ':1       YCMD
+     C                   CAT       'TYPE(':0     YCMD
+     C                   CAT       '*USR':0      YCMD
+     C                   CAT       'SPC':0       YCMD
+     C                   CAT       ')':0         YCMD
+      *
+     C                   CALL      'QCMDEXC'                            99
+     C                   PARM                    YCMD            256
+     C                   PARM      256           YCMDL            15 5
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  *INZSR --  Initialize program                     *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - Name des USRSPC                               *
+      *====================================================*
+      *
+     C     *INZSR        BEGSR
+      *
+     C                   MOVEL(P)  'QTEMP'       USLIB
+     C                   MOVEL(P)  'BNLPGMI'     USNAME
+      *
+     C                   Z-ADD     *ZEROS        RECRDS
+      *
+     C                   ENDSR
+      *
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCR2  type RPGLE - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCR2  "
+mbrtype =  "RPGLE     "
+mbrtext =  "Display Source Code - select module               "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+      *=====================================================================*
+      *                                                                     *
+      *  Kurzdokumentation :                                                *
+      *                                                                     *
+      *  Bereich . . . : DSPSRC                                             *
+      *  Objekt  . . . : DSPSRCR2                                           *
+      *  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
+      *  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+      *  Datum . . . . : 25.07.2001                                         *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  This software is free software, you can redistribute it and/or     *
+      *  modify it under the terms of the GNU General Public License (GPL)  *
+      *  as published by the Free Software Foundation.                      *
+      *                                                                     *
+      *  See GNU General Public License for details.                        *
+      *          http://www.opensource.org                                  *
+      *          http://www.opensource.org/licenses/gpl-license.html        *
+      *                                                                     *
+      *=====================================================================*
+      *  History:                                                           *
+      *                                                                     *
+      *  Datum       Name          Änderung                                 *
+      *  ----------  ------------  ---------------------------------------  *
+      *  10.01.2003  Th.Raddatz    Removed special character § from source. *
+      *                                                                     *
+      *  01.03.2007  Th.Raddatz    Wrong option in module selection subfile *
+      *                            was not correctly processed. Added       *
+      *                            'DSPATR(PC)' to SFPAU.                   *
+      *                                                                     *
+      *=====================================================================*
+      * >>PRE-COMPILER<<                                                    *
+      *   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
+      *                           SRCFILE(&SL/&SF) +                        *
+      *                           SRCMBR(&SM);                              *
+      *   >>COMPILE<<                                                       *
+      *     >>PARM<< TRUNCNBR(*NO);                                         *
+      *     >>PARM<< DBGVIEW(*LIST);                                        *
+      *   >>END-COMPILE<<                                                   *
+      *   >>EXECUTE<<                                                       *
+      * >>END-PRE-COMPILER<<                                                *
+      *=====================================================================*
+      /COPY QDSPSRC,H_SPEC
+      /COPY QDSPSRC,COPYRIGHT
+      *===============================================================*
+     FDSPSRCD   CF   E             WORKSTN USROPN
+     F                                     INFDS(WORKST)
+     F                                     SFILE(PBSFL:RECNO)
+     F                                     INFSR(*PSSR)
+      *
+     D WORKST          DS
+     D  WORKST_KEY           369    369
+      *
+     D  cENTER         C                   const(X'F1')
+     D  cHELP          C                   const(X'F3')
+     D  cPGD           C                   const(X'F4')
+     D  cPGU           C                   const(X'F5')
+     D  cPRNT          C                   const(X'F6')
+     D  cF1            C                   const(X'31')
+     D  cF2            C                   const(X'32')
+     D  cF3            C                   const(X'33')
+     D  cF4            C                   const(X'34')
+     D  cF5            C                   const(X'35')
+     D  cF6            C                   const(X'36')
+     D  cF7            C                   const(X'37')
+     D  cF8            C                   const(X'38')
+     D  cF9            C                   const(X'39')
+     D  cF10           C                   const(X'3A')
+     D  cF11           C                   const(X'3B')
+     D  cF12           C                   const(X'3C')
+     D  cF13           C                   const(X'B1')
+     D  cF14           C                   const(X'B2')
+     D  cF15           C                   const(X'B3')
+     D  cF16           C                   const(X'B4')
+     D  cF17           C                   const(X'B5')
+     D  cF18           C                   const(X'B6')
+     D  cF19           C                   const(X'B7')
+     D  cF20           C                   const(X'B8')
+     D  cF21           C                   const(X'B9')
+     D  cF22           C                   const(X'BA')
+     D  cF23           C                   const(X'BB')
+     D  cF24           C                   const(X'BC')
+     D  cCLEAR         C                   const(X'BD')
+      *
+      *  Datenstruktur für List API
+     D PL0100          DS
+     D  P1PGME                 1     10
+     D  P1LIB                 11     20
+     D  P1MDNM                21     30
+     D  P1MDLB                31     40
+     D  P1SRCF                41     50
+     D  P1SRCL                51     60
+     D  P1SRCM                61     70
+     D  P1MATR                71     80
+     D  P1MCDT                81     93
+     D  P1SUDT                94    106
+     D  P1STNM               107    116
+     D  P1STLB               117    126
+     D  P1LANG               127    136
+     D  P1OPT                137    140B 0
+     D  P1MOPT               141    144B 0
+     D  P1DBG                145    154
+     D  P1CRLS               155    160
+     D  P1FRLS               161    166
+     D  P1RES1               167    186
+     D  P1USRM               187    187
+     D  P1LICP               188    200
+     D  P1PTF                201    205
+     D  P1APAR               206    211
+     D  P1CDTA               212    212
+     D  P1CCSI               213    216
+     D  P1OCLV               217    224
+     D  P1PFRC               225    225
+     D  P1RES2               226    324
+     D  P1NSQL               325    328
+     D  P1RDB                329    346
+     D  P1CMT                347    356
+     D  P1ALWD               357    366
+     D  P1CLSC               367    376
+     D  P1NMCV               377    386
+     D  P1DTFM               387    396
+     D  P1DTSP               397    397
+     D  P1TMFM               398    407
+     D  P1TMSP               408    408
+     D  P1DLYP               409    418
+     D  P1ALWB               419    428
+     D  P1DCNM               429    438
+     D  P1SPNM               439    448
+     D  P1SPLB               449    458
+     D  P1DUSR               459    468
+     D  P1SSNM               469    478
+     D  P1SSLB               479    488
+     D  P1SLID               489    498
+     D  P1CNMT               499    508
+      *
+     D cTRUE           C                   CONST('1')
+     D cFALSE          C                   CONST('0')
+      *
+      *  Parameter für DSPSRCR1 und DSPSRCR2
+     D YDATA           DS           512
+      *
+      ********************************************************************
+      *           H A U P T S T E U E R L E I S T E                      *
+      ********************************************************************
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    XQPGM            20
+     C                   PARM                    XOBJTP           10
+     C                   PARM                    XDSPM             1
+     C                   PARM                    XQSRC            20
+     C                   PARM                    XSRCM            10
+     C                   PARM                    XRCD             10
+      *
+     C     P#MDL         PLIST
+     C                   PARM                    YQPGM            20
+     C                   PARM                    YCTRL             1
+     C                   PARM                    YCNT             10 0
+     C                   PARM                    YDATA
+      *
+      *---------------------------------------------------*
+      *
+     C                   EXSR      FIRST
+      *
+     C                   DO        *HIVAL
+      *
+     C                   WRITE     PBBOT
+      *
+      *  Wenn keine Einträge vorhanden sind,
+     C     *IN80         IFEQ      '0'
+      *  ... dann Leermeldung ausgeben
+     C                   WRITE     PBLEER
+     C                   ENDIF
+      *
+     C                   EXFMT     PBCTL
+      *
+     C                   SELECT
+     C     WORKST_KEY    WHENEQ    cF3
+     C                   MOVEL(P)  '*CANCEL'     XRCD
+     C                   LEAVE
+     C     WORKST_KEY    WHENEQ    cF5
+     C                   EXSR      VREFR
+     C                   ITER
+     C     WORKST_KEY    WHENEQ    cF12
+     C                   MOVEL(P)  '*CANCEL'     XRCD
+     C                   LEAVE
+     C     WORKST_KEY    WHENEQ    cENTER
+     C                   EXSR      VSFL
+     C     ISFND         IFEQ      cTRUE
+     C                   LEAVE
+     C                   ELSE
+     C                   ITER
+     C                   ENDIF
+     C                   OTHER
+     C                   ITER
+     C                   ENDSL
+      *
+     C                   ENDDO
+      *
+      *---------------------------------------------------*
+      *  Programmende
+     C                   CLOSE     DSPSRCD
+      *
+     C     ENDE          TAG
+      *
+     C                   EXSR      DELLST
+      *
+     C                   RETURN
+      *
+      *====================================================*
+      *  VREFR  --  Aktualisieren Bildschirm               *
+      *====================================================*
+      *
+     C     VREFR         BEGSR
+      *
+     C                   EXSR      CRTLST
+      *
+     C                   EXSR      PBCLR
+     C                   EXSR      PBFL
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  VSFL   --  Lesen der Subfileeingaben              *
+      *====================================================*
+      *
+     C     VSFL          BEGSR
+      *
+      *  "Not found"
+     C                   MOVEL     cFALSE        ISFND
+      *
+     C     *IN80         IFEQ      '0'
+      *  Keine Einträge vorhanden ...
+     C                   ELSE
+      *
+     C     *IN11         DOUEQ     '1'
+     C                   READC     PBSFL                                  11
+      *  "Is found"
+     C     *IN11         IFEQ      '0'
+     C                   SELECT
+     C     SFPAU         WHENEQ    ''
+     C                   MOVEL(P)  '0'           *IN83                          SFLNXTCHG
+     C                   MOVEL(P)  '0'           *IN84                          DSPATR(PC)
+     C                   UPDATE    PBSFL
+     C     SFPAU         WHENEQ    '1'
+     C                   MOVEL(P)  *BLANKS       SFPAU
+     C                   MOVEL(P)  '0'           *IN83                          SFLNXTCHG
+     C                   MOVEL(P)  '0'           *IN84                          DSPATR(PC)
+     C                   UPDATE    PBSFL
+     C                   EXSR      FILLEL
+     C                   MOVEL     cTRUE         ISFND
+     C                   OTHER
+     C                   MOVEL(P)  '1'           *IN83                          SFLNXTCHG
+     C                   MOVEL(P)  '1'           *IN84                          DSPATR(PC)
+     C                   UPDATE    PBSFL
+     C                   LEAVE
+     C                   ENDSL
+     C                   ENDIF
+      *
+     C                   ENDDO
+      *
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  FILLEL --  Füllen der Rückgabefelder der *ENTRY   *
+      *             Liste                                  *
+      *====================================================*
+      *
+     C     FILLEL        BEGSR
+      *
+     C     $$SRCF        CAT(P)    $$SRCL        XQSRC
+     C                   MOVEL(P)  $$SRCM        XSRCM
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  CRTLST --  erstellen Liste                        *
+      *====================================================*
+      *
+     C     CRTLST        BEGSR
+      *
+     C                   MOVEL(P)  XQPGM         YQPGM
+     C                   MOVEL(P)  '1'           YCTRL
+     C                   Z-ADD     *ZEROS        YCNT
+     C                   MOVEL(P)  *BLANKS       YDATA
+      *
+     C     XOBJTP        IFEQ      '*PGM'
+     C                   CALLB     'DSPSRCR1'    P#MDL
+     C                   ELSE
+     C                   CALLB     'DSPSRCR3'    P#MDL
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  DELLST --  Löschen Liste                          *
+      *====================================================*
+      *
+     C     DELLST        BEGSR
+      *
+     C                   MOVEL(P)  '4'           YCTRL
+      *
+     C     XOBJTP        IFEQ      '*PGM'
+     C                   CALLB     'DSPSRCR1'    P#MDL
+     C                   ELSE
+     C                   CALLB     'DSPSRCR3'    P#MDL
+     C                   ENDIF
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  REDLST --  Lesen nächsten Eintrag                 *
+      *====================================================*
+      *
+     C     REDLST        BEGSR
+      *
+     C                   MOVEL(P)  '5'           YCTRL
+      *
+     C     XOBJTP        IFEQ      '*PGM'
+     C                   CALLB     'DSPSRCR1'    P#MDL
+     C                   ELSE
+     C                   CALLB     'DSPSRCR3'    P#MDL
+     C                   ENDIF
+      *
+     C                   MOVEL(P)  YDATA         PL0100
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  PBCLR  --  Löschen der Subfile                    *
+      *====================================================*
+      *
+     C     PBCLR         BEGSR
+      *
+     C                   MOVEL(P)  '0'           *IN80                          SFLDSP/SFLCLR
+     C                   MOVEL(P)  '0'           *IN82                          SFLDSPCTL
+     C                   WRITE     PBCTL
+     C                   MOVEL(P)  '1'           *IN82                          SFLDSPCTL
+      *
+     C                   MOVEL(P)  '1'           *IN81                          SFLEND
+      *
+      *  Satzzähler
+     C                   Z-ADD     *ZEROS        RECNO
+      *  Position der Subfile in der Anzeige
+     C                   Z-ADD     1             SFSANR
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  PBFL   --  Lesen der Einträge und füllen der      *
+      *             Subfile                                *
+      *====================================================*
+      *
+     C     PBFL          BEGSR
+      *
+     C     YCNT          DOWGT     *ZEROS
+      *
+     C                   ADD       1             RECNO
+     C                   EXSR      REDLST
+     C                   EXSR      FILLSF
+      *
+      *  Wenn nur ein Eintrag in der Liste ist,
+     C     YCNT          IFEQ      1
+     C     RECNO         ANDEQ     1
+      *  ... dann diesen Eintrag autom. mit
+      *      Datenfreigabe auswählen
+     C                   MOVEL(P)  '1'           *IN83                          SFLNXTCHG
+     C                   MOVEL(P)  '1'           SFPAU
+     C                   ELSE
+      *  ... alle anderen Einträge müssen
+      *      gezielt ausgewählt werden
+     C                   MOVEL(P)  '0'           *IN83                          SFLNXTCHG
+     C                   MOVEL(P)  *BLANKS       SFPAU
+     C                   ENDIF
+      *
+     C                   MOVEL(P)  '0'           *IN84                          DSPATR(PC)
+      *
+     C                   WRITE     PBSFL
+     C                   MOVEL(P)  '1'           *IN80                          SFLDSP/SFLCLR
+     C                   ENDDO
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  FILLSF --  Füllen der Subfilefelder               *
+      *====================================================*
+      *
+     C     FILLSF        BEGSR
+      *
+     C                   MOVEL(P)  *BLANKS       SFPAU
+     C                   MOVEL(P)  P1MDNM        $$MDNM
+     C                   MOVEL(P)  P1MDLB        $$MDLB
+     C                   MOVEL(P)  P1SRCF        $$SRCF
+     C                   MOVEL(P)  P1SRCL        $$SRCL
+     C                   MOVEL(P)  P1SRCM        $$SRCM
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  FIRST  --  Initialisierung bei jedem Aufruf       *
+      *====================================================*
+      *
+     C     FIRST         BEGSR
+      *
+      *  Satzzähler
+     C                   Z-ADD     *ZEROS        RECNO             5 0
+      *  Satzzähler
+     C                   Z-ADD     *ZEROS        RECNO             5 0
+      *  "Not found"
+     C                   MOVEL(P)  cFALSE        ISFND             1
+      *
+     C                   MOVEL(P)  *BLANKS       XRCD
+     C                   MOVEL(P)  *BLANKS       XQSRC
+     C                   MOVEL(P)  *BLANKS       XSRCM
+      *
+     C                   EXSR      CRTLST
+      *
+     C                   SELECT
+      *  Keine Einträge vorhanden ...
+     C     YCNT          WHENLE    *ZEROS
+     C                   GOTO      ENDE
+      *  Nur ein Eintrag vorhanden ...
+     C     YCNT          WHENEQ    1
+     C     XDSPM         ANDEQ     cFALSE
+     C                   EXSR      REDLST
+     C                   EXSR      FILLSF
+     C                   EXSR      FILLEL
+     C                   GOTO      ENDE
+     C                   OTHER
+      *  Mehr als 1 Eintrag vorhanden ...
+      *  Auswahl auf Bildschirm bringen,
+      *  hierzu Bildschirmdatei öffnen
+     C                   OPEN      DSPSRCD
+     C                   EXSR      VREFR
+     C                   ENDSL
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  *INZSR --  Einamlige Initialisierung              *
+      *====================================================*
+      *
+     C     *INZSR        BEGSR
+      *
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  *PSSR  --  Fehlerbehandlung                       *
+      *====================================================*
+      *
+     C     *PSSR         BEGSR
+      *
+      *
+     C                   ENDSR     '*CANCL'
+      *
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing DSPSRCR3  type RPGLE - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "DSPSRCR3  "
+mbrtype =  "RPGLE     "
+mbrtext =  "Display Source Code - list service program modules"
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+      *=====================================================================*
+      *                                                                     *
+      *  Kurzdokumentation :                                                *
+      *                                                                     *
+      *  Bereich . . . : DSPSRC                                             *
+      *  Objekt  . . . : DSPSRCR3                                           *
+      *  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
+      *  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+      *  Datum . . . . : 25.07.2001                                         *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  This software is free software, you can redistribute it and/or     *
+      *  modify it under the terms of the GNU General Public License (GPL)  *
+      *  as published by the Free Software Foundation.                      *
+      *                                                                     *
+      *  See GNU General Public License for details.                        *
+      *          http://www.opensource.org                                  *
+      *          http://www.opensource.org/licenses/gpl-license.html        *
+      *                                                                     *
+      *=====================================================================*
+      *  History:                                                           *
+      *                                                                     *
+      *  Datum       Name          Änderung                                 *
+      *  ----------  ------------  ---------------------------------------  *
+      *                                                                     *
+      *=====================================================================*
+      * >>PRE-COMPILER<<                                                    *
+      *   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
+      *                           SRCFILE(&SL/&SF) +                        *
+      *                           SRCMBR(&SM);                              *
+      *   >>COMPILE<<                                                       *
+      *     >>PARM<< TRUNCNBR(*NO);                                         *
+      *     >>PARM<< DBGVIEW(*LIST);                                        *
+      *   >>END-COMPILE<<                                                   *
+      *   >>EXECUTE<<                                                       *
+      * >>END-PRE-COMPILER<<                                                *
+      *=====================================================================*
+      *                                                                     *
+      *  INPUT-Parameter:                                                   *
+      *  ================                                                   *
+      *                                                                     *
+      *  XQPGM   - Qualifizierte Programmname                               *
+      *             1 - 10:  pgm                                            *
+      *            11 - 20:  library                                        *
+      *                        *ALL        Alle Bibliotheken auf dem System *
+      *                        *ALLUSR     Alle nicht-IBM Bibliotheken      *
+      *                        *CURLIB     Aktuelle Bibliothek des Jobs     *
+      *                        *LIBL       kompl. Bibliotheksliste          *
+      *                        *USRLIBL    Benutzerteil der Bibl.Liste      *
+      *                                                                     *
+      *  XCTRL   - Funktionscode                                            *
+      *              1 - erstellen Liste                   CREATE           *
+      *              5 - lesen nächsten Eintrag            READ             *
+      *              4 - löschen Liste                     DELETE           *
+      *                                                                     *
+      *  OUTPUT-Parameter:                                                  *
+      *  =================                                                  *
+      *                                                                     *
+      *  XCNT    - Anzahl noch verfügbarer Einträge                         *
+      *  XDATA   - Eintragsdaten                                            *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  Typische Aufrufreihenfolge                                         *
+      *                                                                     *
+      *        A_PGM   - Funktion (1)    erstellen Liste                    *
+      *                                                                     *
+      *  XCNT  DOWGT *ZEROS                                                 *
+      *        A_PGM   - Funktion (5)    lesen nächsten Eintrag             *
+      *        ENDDO                                                        *
+      *                                                                     *
+      *        A_PGM   - Funktion (4)    löschen Liste                      *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  Datenstruktur  SPGL0100:                                           *
+      *                                                                     *
+      *   S1PGM  - Service program name                                     *
+      *   S1LIB  - Service program library name                             *
+      *            *ALL, *ALLUSR, *CURLIB, *LIBL, *USRLIBL                  *
+      *   S1MDNM - Bound module name                                        *
+      *   S1MDLB - Bound module library name                                *
+      *   S1SRCF - Source file name                                         *
+      *   S1SRCL - Source library name                                      *
+      *   S1SRCM - Source member name                                       *
+      *   S1MATR - Module attribute                                         *
+      *   S1MCDT - Module creation date and time                            *
+      *   S1SUDT - Source updated date and time                             *
+      *   S1STNM - Sort sequence table name                                 *
+      *   S1STLB - Sort sequence table library name                         *
+      *   S1LANG - Language identifier                                      *
+      *   S1OPT  - Optimization level                                       *
+      *   S1MOPT - Maximum opimization level                                *
+      *   S1DBG  - Debug data                                               *
+      *   S1CRLS - Release module created on                                *
+      *   S1FRLS - Release module created for                               *
+      *   S1RES1 - Reserved 1                                               *
+      *   S1USRM - User modified                                            *
+      *   S1LICP - Licensed program                                         *
+      *   S1PTF  - PTF number                                               *
+      *   S1APAR - APAR ID                                                  *
+      *   S1CDTA - Creation data                                            *
+      *   S1CCSI - Module CCSID                                             *
+      *   S1OCLV - Objekt control level                                     *
+      *   S1PFRC - Enable performance collection                            *
+      *   S1PDTA - Profiling data                                           *
+      *   S1RES2 - Reserved 2                                               *
+      *   S1NPRC - Number of Procedures                                     *
+      *   S1NPBR - Number of procedures block reordered                     *
+      *   S1NPBM - Number of procedures block-order measured                *
+      *   S1RES3 - Reserved 3                                               *
+      *   S1NSQL - Number of SQL statements                                 *
+      *   S1RDB  - Relational database                                      *
+      *   S1CMT  - Commitment control                                       *
+      *   S1ALWD - Allow copy of date                                       *
+      *   S1CLSC - Close SQL cursor                                         *
+      *   S1NMCV - Naming convention                                        *
+      *   S1DTFM - Date format                                              *
+      *   S1DTSP - Date separator                                           *
+      *   S1TMFM - Time format                                              *
+      *   S1TMSP - Time separator                                           *
+      *   S1DLYP - Delay PREPARE                                            *
+      *   S1ALWB - Allow blocking                                           *
+      *   S1DCNM - Default collection name                                  *
+      *   S1SPNM - SQL package name                                         *
+      *   S1SPLB - SQL package library name                                 *
+      *   S1DUSR - Dynamic user profile                                     *
+      *   S1SSNM - SQL sort sequence table name                             *
+      *   S1SSLB - SQL sort sequence table library name                     *
+      *   S1SLID - SQL language identifier                                  *
+      *   S1CNMT - Connection method                                        *
+      *                                                                     *
+      *=====================================================================*
+      /COPY QDSPSRC,H_SPEC
+      /COPY QDSPSRC,COPYRIGHT
+      *=====================================================================*
+      *
+      *  Eintragsdaten der *ENTRY-Liste
+     D XDATA           DS           512
+      *
+      *  Felder für List API
+     D                 DS
+     D  SLQPGM                 1     20
+     D  SLPGM                  1     10
+     D  SLLIB                 11     20
+     D  SLFMT                 21     28
+      *
+      *  Datenstruktur für der Rückgabewert des List API.
+      *  SPGL0100 - Service program module (*MODULE) information.
+     D SL0100          DS
+     D  S1PGME                 1     10
+     D  S1LIB                 11     20
+     D  S1MDNM                21     30
+     D  S1MDLB                31     40
+     D  S1SRCF                41     50
+     D  S1SRCL                51     60
+     D  S1SRCM                61     70
+     D  S1MATR                71     80
+     D  S1MCDT                81     93
+     D  S1SUDT                94    106
+     D  S1STNM               107    116
+     D  S1STLB               117    126
+     D  S1LANG               127    136
+     D  S1OPT                137    140B 0
+     D  S1MOPT               141    144B 0
+     D  S1DBG                145    154
+     D  S1CRLS               155    160
+     D  S1FRLS               161    166
+     D  S1RES1               167    186
+     D  S1USRM               187    187
+     D  S1LICP               188    200
+     D  S1PTF                201    205
+     D  S1APAR               206    211
+     D  S1CDTA               212    212
+     D  S1CCSI               213    216
+     D  S1OCLV               217    224
+     D  S1PFRC               225    225
+     D  S1PDTA               226    235
+     D  S1RES2               236    236
+     D  S1NPRC               237    240B 0
+     D  S1NPBR               241    244B 0
+     D  S1NPBM               245    248B 0
+     D  S1RES3               249    324
+     D  S1NSQL               325    328
+     D  S1RDB                329    346
+     D  S1CMT                347    356
+     D  S1ALWD               357    366
+     D  S1CLSC               367    376
+     D  S1NMCV               377    386
+     D  S1DTFM               387    396
+     D  S1DTSP               397    397
+     D  S1TMFM               398    407
+     D  S1TMSP               408    408
+     D  S1DLYP               409    418
+     D  S1ALWB               419    428
+     D  S1DCNM               429    438
+     D  S1SPNM               439    448
+     D  S1SPLB               449    458
+     D  S1DUSR               459    468
+     D  S1SSNM               469    478
+     D  S1SSLB               479    488
+     D  S1SLID               489    498
+     D  S1CNMT               499    508
+      *  Länge der Datenstruktur
+     D cDTLN           C                   CONST(%SIZE(SL0100))
+      *
+      *===============================================================*
+      *  Erforderliche Änderungen für anderes List API                *
+      *    - *NONE                                                    *
+      *===============================================================*
+      *
+      *  API Fehlerdatenstruktur
+     D ERRCOD          DS
+     D  ERRPRV                 1      4B 0 INZ
+     D  ERRAVL                 5      8B 0 INZ
+     D  ERRID                  9     15    INZ
+     D  ERRRSV                16     16    INZ
+     D  ERRDTA                17     32    INZ
+      *
+      *  Felder für QUSRTVUS
+     D                 DS
+     D  USDTLN                 1      4B 0 INZ
+     D  USSPOS                 5      8B 0 INZ
+      *
+      *  Felder für QUSCRTUS
+     D                 DS
+     D  USFNME                 1     20
+     D  USNAME                 1     10    INZ
+     D  USLIB                 11     20    INZ
+     D  USATTR                21     30    INZ
+     D  USSIZE                31     34B 0 INZ
+     D  USINIT                35     35    INZ
+     D  USAUTH                36     45    INZ
+     D  USDESC                46     95    INZ
+      *
+      *  Felder für Generic List Header
+     D US#OFS          DS
+     D  OFFSET                 1      4B 0 INZ
+     D  RECRDS                 9     12B 0 INZ
+     D  RSIZE                 13     16B 0 INZ
+      *
+      ********************************************************************
+      *           Hauptsteuerung                                         *
+      *------------------------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API                   *
+      *    - *ENTRY liste: Länge XDATA                                   *
+      ********************************************************************
+      *
+     C     *ENTRY        PLIST
+     C                   PARM                    XQPGM            20
+     C                   PARM                    XCTRL             1
+      *
+     C                   PARM                    XCNT             10 0
+     C                   PARM                    XDATA                          Length 512
+      *
+      *---------------------------------------------------*
+      *
+     C                   SELECT
+      *  erstellen Liste
+     C     XCTRL         WHENEQ    '1'
+     C                   EXSR      CREATE
+      *  löschen Liste
+     C     XCTRL         WHENEQ    '4'
+     C                   EXSR      DELETE
+      *  lesen nächsten Eintrag
+     C     XCTRL         WHENEQ    '5'
+     C                   EXSR      READ
+     C                   ENDSL
+      *
+      *---------------------------------------------------*
+      *  Programmende
+      *
+     C     ENDE          TAG
+      *
+     C                   RETURN
+      *
+      *====================================================*
+      *  CREATE --  Erstellen USRSPC und Liste             *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - evtl. Initialgröße des USRSPC                 *
+      *    - API Aufruf für Liste                          *
+      *====================================================*
+      *
+     C     CREATE        BEGSR
+      *
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   CLEAR                   SL0100
+      *
+     C                   EXSR      CHKOBJ
+      *
+      *  erstellen USRSPC
+     C     *IN99         IFEQ      '1'
+     C                   CALL      'QUSCRTUS'
+     C                   PARM                    USFNME
+     C                   PARM      'TEMP'        USATTR
+     C                   PARM      2048          USSIZE
+     C                   PARM      ' '           USINIT
+     C                   PARM      '*ALL'        USAUTH
+     C                   PARM      ' '           USDESC
+     C                   ENDIF
+      *
+      *  erstellen Liste
+     C                   MOVEL     'SPGL0100'    SLFMT                          format
+     C                   MOVEL     XQPGM         SLQPGM                         qualf.pgm name
+     C                   Z-ADD     32            ERRPRV                         len provided
+      *
+     C                   CALL      'QBNLSPGM'
+     C                   PARM                    USFNME
+     C                   PARM                    SLFMT
+     C                   PARM                    SLQPGM
+     C                   PARM                    ERRCOD
+      *
+     C     ERRAVL        IFNE      *ZEROS
+      *  Fehler aufgetreten!
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   ELSE
+      *  ermitteln Offset zu den Eintragsdaten
+     C                   Z-ADD     125           USDTLN
+     C                   Z-ADD     16            USSPOS
+      *
+     C                   CALL      'QUSRTVUS'
+     C                   PARM                    USFNME
+     C                   PARM                    USDTLN
+     C                   PARM                    USSPOS
+     C                   PARM                    US#OFS
+      *
+     C                   ADD       1             OFFSET
+     C                   ENDIF
+      *
+     C                   Z-ADD     RECRDS        XCNT
+     C                   MOVEL(P)  SL0100        XDATA
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  DELETE --  Löschen USRSPC                         *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - *NONE                                         *
+      *====================================================*
+      *
+     C     DELETE        BEGSR
+      *
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   CLEAR                   SL0100
+      *
+     C                   EXSR      CHKOBJ
+      *
+     C     *IN99         IFEQ      '0'
+      *
+     C                   MOVEL(P)  'DLTUSR'      YCMD
+     C                   CAT       'SPC':0       YCMD
+     C                   CAT       'USR':1       YCMD
+     C                   CAT       'SPC(':0      YCMD
+     C                   CAT       USLIB:0       YCMD
+     C                   CAT       '/':0         YCMD
+     C                   CAT       USNAME:0      YCMD
+     C                   CAT       ')':0         YCMD
+      *
+     C                   CALL      'QCMDEXC'                            99
+     C                   PARM                    YCMD
+     C                   PARM      256           YCMDL
+      *
+     C                   ENDIF
+      *
+     C                   Z-ADD     RECRDS        XCNT
+     C                   MOVEL(P)  SL0100        XDATA
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  READ   --  Lesen nächsten Eintrag                 *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - *NONE                                         *
+      *====================================================*
+      *
+     C     READ          BEGSR
+      *
+     C                   CLEAR                   SL0100
+      *
+     C     RECRDS        IFLE      *ZEROS
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   ELSE
+      *
+     C                   Z-ADD     cDTLN         USDTLN
+     C                   Z-ADD     OFFSET        USSPOS
+      *
+     C                   CALL      'QUSRTVUS'                           99
+     C                   PARM                    USFNME
+     C                   PARM                    USSPOS
+     C                   PARM                    USDTLN
+     C                   PARM                    SL0100
+      *
+     C     *IN99         IFEQ      '0'
+     C                   SUB       1             RECRDS
+     C                   ADD       RSIZE         OFFSET
+     C                   ELSE
+     C                   Z-ADD     *ZEROS        RECRDS
+     C                   ENDIF
+      *
+     C                   ENDIF
+      *
+     C                   Z-ADD     RECRDS        XCNT
+     C                   MOVEL(P)  SL0100        XDATA
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  CHKOBJ --  Prüfen USRSPC                          *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - *NONE                                         *
+      *====================================================*
+      *
+     C     CHKOBJ        BEGSR
+      *
+     C                   MOVEL(P)  'CHKOBJ'      YCMD
+     C                   CAT       'OBJ(':1      YCMD
+     C                   CAT       USLIB:0       YCMD
+     C                   CAT       '/':0         YCMD
+     C                   CAT       USNAME:0      YCMD
+     C                   CAT       ')':0         YCMD
+     C                   CAT       'OBJ':1       YCMD
+     C                   CAT       'TYPE(':0     YCMD
+     C                   CAT       '*USR':0      YCMD
+     C                   CAT       'SPC':0       YCMD
+     C                   CAT       ')':0         YCMD
+      *
+     C                   CALL      'QCMDEXC'                            99
+     C                   PARM                    YCMD            256
+     C                   PARM      256           YCMDL            15 5
+      *
+     C                   ENDSR
+      *
+      *====================================================*
+      *  *INZSR --  Initialize program                     *
+      *----------------------------------------------------*
+      *  Erforderliche Änderungen für anderes List API     *
+      *    - Name des USRSPC                               *
+      *====================================================*
+      *
+     C     *INZSR        BEGSR
+      *
+     C                   MOVEL(P)  'QTEMP'       USLIB
+     C                   MOVEL(P)  'BNLPGMI'     USNAME
+      *
+     C                   Z-ADD     *ZEROS        RECRDS
+      *
+     C                   ENDSR
+      *
+]]>  </copysrc>
+</mbr>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
+Installing H_SPEC  type RPGLE - in progress.
+]]>  </sendmsg>
+<!-- START OF MEMBER  -->
+<mbr
+mbrname =  "H_SPEC    "
+mbrtype =  "RPGLE     "
+mbrtext =  "H-Specifications                                  "
+srcfile =  "QDSPSRC   "
+srclib  =  "selected  "
+srclen  =  "00112"
+srccssid=  "00273">
+<copysrc><![CDATA[
+     H DEBUG DECEDIT('0,') DATEDIT(*DMY.)
+]]>  </copysrc>
+</mbr>
+<qcmdexc condition="*NONE" release="*CURRENT" dltsplf="A_INSTALL"><![CDATA[
+CRTBNDCL PGM(&tolib/A_INSTALL) SRCFILE(&tolib/QDSPSRC) SRCMBR(*PGM) DFTACTGRP(*NO) ACTGRP(*NEW) DBGV
+IEW(*LIST)
+]]>  </qcmdexc>
+<qcmdexc condition="*NONE" release="*CURRENT" dltsplf="*NONE"><![CDATA[
+CALL PGM(&tolib/A_INSTALL) PARM('&TGTRLS' '&SRCFILE' '&tolib' '&LANG')
+]]>  </qcmdexc>
+<qcmdexc condition="*NONE" release="*CURRENT" dltsplf="*NONE"><![CDATA[
+DLTPGM PGM(&tolib/A_INSTALL)
+]]>  </qcmdexc>
+<sendmsg  sendmsgid="CPF9897" sendmsgtype = "*COMP     "><![CDATA[
+Application DSPSRC successfully installed.
+]]>  </sendmsg>
+</upload>

@@ -1,0 +1,170 @@
+.*=====================================================================*
+.*                                                                     *
+.*  Kurzdokumentation :                                                *
+.*                                                                     *
+.*  Bereich . . . : DSPSRC                                             *
+.*  Objekt  . . . : DSPSRCPG                                           *
+.*  Beschreibung  : Tool: DSPSRC     (Display Source Code) Ger         *
+.*  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+.*  Datum . . . . : 25.07.2001                                         *
+.*                                                                     *
+.*=====================================================================*
+.*                                                                     *
+.*  This software is free software, you can redistribute it and/or     *
+.*  modify it under the terms of the GNU General Public License (GPL)  *
+.*  as published by the Free Software Foundation.                      *
+.*                                                                     *
+.*  See GNU General Public License for details.                        *
+.*          http://www.opensource.org                                  *
+.*          http://www.opensource.org/licenses/gpl-license.html        *
+.*                                                                     *
+.*=====================================================================*
+.*  History:                                                           *
+.*                                                                     *
+.*  Datum       Name          Änderung                                 *
+.*  ----------  ------------  ---------------------------------------  *
+.*                                                                     *
+.*=====================================================================*
+.* >>PRE-COMPILER<<                                                    *
+.*                                                                     *
+.*   >>CRTCMD<< CRTPNLGRP    PNLGRP(&LI/DSPSRCP) +                         *
+.*                           SRCFILE(&SL/&SF) +                        *
+.*                           SRCMBR(&SM);                              *
+.*                                                                     *
+.*   >>COMPILE<<                                                       *
+.*   >>END-COMPILE<<                                                   *
+.*                                                                     *
+.*   >>EXECUTE<<                                                       *
+.*                                                                     *
+.* >>END-PRE-COMPILER<<                                                *
+.*=====================================================================*
+:PNLGRP.
+.*
+:HELP name='DSPSRC/ALL'.
+:IMHELP name=DSPSRC.
+:IMHELP name='DSPSRC/OBJ       '.
+:IMHELP name='DSPSRC/OBJTYPE   '.
+:IMHELP name='DSPSRC/DSPMOD    '.
+:EHELP.
+.*--------------------------------------------------------------------
+.* Hilfetext für den Befehl
+.*--------------------------------------------------------------------
+:HELP NAME='DSPSRC'.
+Quellenteildatei anzeigen (DSPSRC) - Hilfe
+:P.
+Der Befehl DSPSRC zeigt die Quellenteildatei an, aus der ein Objekt
+erstellt worden ist.
+.*
+:P.
+Bei ILE-Programmen wird die Quellenteildatei des Moduls angezeigt. Wenn
+ein ILE-Programm aus mehreren Modulen erstellt worden ist, dann wird
+eine Liste der Module angezeigt und das anzuzeigende Modul kann aus
+der Modulliste ausgewählt werden.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort OBJ
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/OBJ       '.
+Objekt - Hilfe
+:XH3.Objekt (OBJ)
+:P.
+Namen des Objekts und der Bibliothek angeben, dessen
+Quellenteildatei angezeigt werden soll.
+.*
+:IMHELP name='COM/REQPARM'.
+.*
+:PARML.
+:PT.:PV.Objektname:EPV.
+:PD.Name der Datei.
+:EPARML.
+:P.
+Gültige Bibliothekswerte sind:
+:P.
+:PARML.
+:PT.:PK DEF.*LIBL:EPK.
+:PD.Objekt wird über die Bibliotheksliste gesucht.
+:PT.:PV.Bibliothek:EPV.
+:PD.Name der Bibliothek, welche das Objekt enthält.
+:EPARML.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort OBJTYPE
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/OBJTYPE   '.
+Objektart - Hilfe
+:XH3.Objektart (OBJTYPE)
+:P.
+Gibt die Art des Objekts an. Um eine vollständige Liste der Objektarten
+zu erhalten, den Positionsanzeiger in das Feld der Bedienerführung
+:HP2.Objektart:EHP2. (Parameter OBJTYPE) bewegen und F4 drücken.
+.*
+:IMHELP name='COM/OPTPARM'.
+.*
+:PARML.
+:PT.:PV.Objektart:EPV.
+:PD.Den Wert für die Objektart angeben.
+:EPARML.
+.*
+:EHELP.
+.*
+.*--------------------------------------------------------------------
+.* Hilfetext für Schlüsselwort DSPMOD
+.*--------------------------------------------------------------------
+:HELP name='DSPSRC/DSPMOD    '.
+ILE-Module anzeigen - Hilfe
+:XH3.ILE-Module anzeigen (DSPMOD)
+:P.
+Angeben, ob die Modulliste von ILE-Programmen in jedem Fall angezeigt
+werden soll. Wenn ein ILE-Programm nur aus einem Modul besteht, dann
+wird die Liste der Module normalerweise nicht angezeigt.
+.*
+:IMHELP name='COM/OPTPARM'.
+.*
+:PARML.
+:PT.:PK DEF.*NO:EPK.
+:PD.Die Modulliste wird nicht angezeigt, ausgenommen dann, wenn das
+ILE-Programm aus mehreren Modulen besteht.
+:PT.:PV.*YES:EPV.
+:PD.Die Modulliste wird in jedem Fall angezeigt.
+:EPARML.
+.*
+:EHELP.
+.*
+.*====================================================================
+.*  Textbausteine, die an mehreren Stellen im Hilfetext
+.*  verwendet werden.
+.*====================================================================
+
+.*=====================================
+.*  Erforderlicher Parameter
+.*=====================================
+:HELP NAME='COM/REQPARM'.
+:P.
+Dieser Parameter ist erforderlich.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Optionaler Parameter
+.*=====================================
+:HELP NAME='COM/OPTPARM'.
+:P.
+Dieser Parameter ist optional.
+:P.
+:IMHELP name='COM/VALUES'.
+:EHELP.
+
+.*=====================================
+.*  Werteliste
+.*=====================================
+:HELP NAME='COM/VALUES'.
+:P.
+Mögliche Werte sind:
+:EHELP.
+.*
+:EPNLGRP.

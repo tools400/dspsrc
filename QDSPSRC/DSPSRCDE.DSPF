@@ -1,0 +1,118 @@
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+      * =================================================================== *
+      *                                                                     *
+      *  Kurzdokumentation :                                                *
+      *                                                                     *
+      *  Bereich . . . : DSPSRC                                             *
+      *  Objekt  . . . : DSPSRCDE                                           *
+      *  Beschreibung  : Tool: DSPSRC     (Display Source Code) Eng         *
+      *  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+      *  Datum . . . . : 03.06.2002                                         *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  This software is free software, you can redistribute it and/or     *
+      *  modify it under the terms of the GNU General Public License (GPL)  *
+      *  as published by the Free Software Foundation.                      *
+      *                                                                     *
+      *  See GNU General Public License for details.                        *
+      *          http://www.opensource.org                                  *
+      *          http://www.opensource.org/licenses/gpl-license.html        *
+      *                                                                     *
+      *=====================================================================*
+      *  History:                                                           *
+      *                                                                     *
+      *  Datum       Name          Änderung                                 *
+      *  ----------  ------------  ---------------------------------------  *
+      *                                                                     *
+      * =================================================================== *
+      * >>PRE-COMPILER<<                                                    *
+      *                                                                     *
+      *   >>CRTCMD<< CRTDSPF      FILE(&LI/DSPSRCD) +                       *
+      *                           SRCFILE(&SL/&SF) +                        *
+      *                           SRCMBR(&SM);                              *
+      *                                                                     *
+      *   >>COMPILE<<                                                       *
+      *   >>END-COMPILE<<                                                   *
+      *                                                                     *
+      *   >>EXECUTE<<                                                       *
+      *                                                                     *
+      * >>END-PRE-COMPILER<<                                                *
+      * =================================================================== *
+      *%%EC
+     A                                      DSPSIZ(24 80 *DS3                  -
+     A                                             27 132 *DS4)
+     A                                      PRINT
+      *
+      *-------------------------------------*
+     A          R PBSFL                     SFL
+     A  83                                  SFLNXTCHG
+     A            SFPAU          1   B  5  2
+     A            $$MDNM        10   O  5  5
+     A            $$MDLB        10   O  5 17
+     A            $$SRCF        10   O  5 30
+     A            $$SRCL        10   O  5 42
+     A            $$SRCM        10   O  5 54
+      *
+      *-------------------------------------*
+     A          R PBCTL                     SFLCTL(PBSFL)
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+     A  *DS3                                SFLSIZ(0011)
+     A  *DS4                                SFLSIZ(0011)
+     A  *DS3                                SFLPAG(0010)
+     A  *DS4                                SFLPAG(0010)
+     A  *DS3                                WINDOW(PBBOT)
+     A  *DS4                                WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+     A  80                                  SFLDSP
+     A  82                                  SFLDSPCTL
+     A N80                                  SFLCLR
+     A  81                                  SFLEND(*MORE)
+     A            SFSANR         4S 0H      SFLRCDNBR(CURSOR)
+     A                                  2 25'Select ILE Module'
+     A                                      COLOR(WHT)
+     A                                      DSPATR(UL)
+     A                                  4  2'A'
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4  5'Module      Library   '
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4 29'Source file  Library     Member   -
+     A                                       '
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+      *
+      *-------------------------------------*
+     A          R PBBOT
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+     A  *DS3                                WINDOW(2 2 18 64)
+     A  *DS4                                WINDOW(2 2 18 64)
+     A                                      WDWBORDER((*DSPATR RI) (*CHAR '    -
+     A                                          '))
+     A                                 16  2'                                  -
+     A                                                                  '
+     A                                      DSPATR(UL)
+     A                                 17  2'F3/F12=Exit'
+     A                                 17 17'F5=Refresh'
+      *
+      *-------------------------------------*
+     A          R PBLEER
+      *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
+     A  *DS3                                WINDOW(PBBOT)
+     A  *DS4                                WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                  8  8'(No modules found)'
+      *
+      *-------------------------------------*
+      *  RMVWDW ZUM LÖSCHEN DES WINDOWS
+     A          R RMVWDW                    CLRL(*NO) OVERLAY FRCDTA
+      *
+      *-------------------------------------*
+      *  DER DUMMY SATZ MUSS VORHANDEN SEIN,
+      *  AUCH WENN KEIN ZUGRIFF AUF IHN ERFOLGT !!
+     A          R DUMMY                     ASSUME
+     A                                 11  1' '

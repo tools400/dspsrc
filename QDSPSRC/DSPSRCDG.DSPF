@@ -1,0 +1,110 @@
+      * =================================================================== *
+      *                                                                     *
+      *  Kurzdokumentation :                                                *
+      *                                                                     *
+      *  Bereich . . . : DSPSRC                                             *
+      *  Objekt  . . . : DSPSRCDG                                           *
+      *  Beschreibung  : Tool: DSPSRC     (Display Source Code) Ger         *
+      *  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+      *  Datum . . . . : 25.07.2001                                         *
+      *                                                                     *
+      *=====================================================================*
+      *                                                                     *
+      *  This software is free software, you can redistribute it and/or     *
+      *  modify it under the terms of the GNU General Public License (GPL)  *
+      *  as published by the Free Software Foundation.                      *
+      *                                                                     *
+      *  See GNU General Public License for details.                        *
+      *          http://www.opensource.org                                  *
+      *          http://www.opensource.org/licenses/gpl-license.html        *
+      *                                                                     *
+      *=====================================================================*
+      *  History:                                                           *
+      *                                                                     *
+      *  Datum       Name          Änderung                                 *
+      *  ----------  ------------  ---------------------------------------  *
+      *  01.03.2007  Th.Raddatz    Added 'DSPATR(PC)' to SFPAU.             *
+      *                                                                     *
+      * =================================================================== *
+      * >>PRE-COMPILER<<                                                    *
+      *                                                                     *
+      *   >>CRTCMD<< CRTDSPF      FILE(&LI/DSPSRCD) +                       *
+      *                           SRCFILE(&SL/&SF) +                        *
+      *                           SRCMBR(&SM);                              *
+      *                                                                     *
+      *   >>COMPILE<<                                                       *
+      *   >>END-COMPILE<<                                                   *
+      *                                                                     *
+      *   >>EXECUTE<<                                                       *
+      *                                                                     *
+      * >>END-PRE-COMPILER<<                                                *
+      * =================================================================== *
+     A                                      DSPSIZ(24  80 *DS3 +
+     A                                             27 132 *DS4)
+     A                                      PRINT
+      *
+      *-------------------------------------*
+     A          R PBSFL                     SFL
+     A  83                                  SFLNXTCHG
+     A            SFPAU          1   B  5  2
+     A  84                                  DSPATR(PC)
+     A            $$MDNM        10   O  5  5
+     A            $$MDLB        10   O  5 17
+     A            $$SRCF        10   O  5 30
+     A            $$SRCL        10   O  5 42
+     A            $$SRCM        10   O  5 54
+      *
+      *-------------------------------------*
+     A          R PBCTL                     SFLCTL(PBSFL)
+     A                                      SFLSIZ(0011)
+     A                                      SFLPAG(0010)
+     A                                      WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                      CF03
+     A                                      CF05
+     A                                      CF12
+     A  80                                  SFLDSP
+     A  82                                  SFLDSPCTL
+     A N80                                  SFLCLR
+     A  81                                  SFLEND(*MORE)
+     A            SFSANR         4S 0H      SFLRCDNBR(CURSOR)
+     A                                  2 25'Auswahl ILE-Modul'
+     A                                      COLOR(WHT)
+     A                                      DSPATR(UL)
+     A                                  4  2'A'
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4  5'Modul       Biblitohek'
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+     A                                  4 29'Sourcedatei  Biblitohek  Teildatei-
+     A                                       '
+     A                                      DSPATR(UL)
+     A                                      COLOR(WHT)
+      *
+      *-------------------------------------*
+     A          R PBBOT
+     A                                      WINDOW(2 2 18 64)
+     A                                      WDWBORDER((*DSPATR RI) (*CHAR '    -
+     A                                          '))
+     A                                 16  2'                                  -
+     A                                                                  '
+     A                                      DSPATR(UL)
+     A                                 17  2'F3/F12=zurück'
+     A                                 17 17'F5=neu aufblättern'
+      *
+      *-------------------------------------*
+     A          R PBLEER
+     A                                      WINDOW(PBBOT)
+     A                                      OVERLAY
+     A                                  8  8'(Keine Datensätze vorhanden)'
+      *
+      *-------------------------------------*
+      *  RMVWDW ZUM LÖSCHEN DES WINDOWS
+     A          R RMVWDW                    CLRL(*NO) OVERLAY FRCDTA
+      *
+      *-------------------------------------*
+      *  DER DUMMY SATZ MUSS VORHANDEN SEIN,
+      *  AUCH WENN KEIN ZUGRIFF AUF IHN ERFOLGT !!
+     A          R DUMMY                     ASSUME
+     A                                 11  1' '
