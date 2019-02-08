@@ -29,10 +29,10 @@
 /*   >>CRTCMD<< CRTCLMOD     MODULE(&LI/&OB) +                         */
 /*                           SRCFILE(&SL/&SF) +                        */
 /*                           SRCMBR(&SM);                              */
-/*   >>COMPILE<<                                                       */
+/*   >>IMPORTANT<<                                                     */
 /*     >>PARM<< DBGVIEW(*LIST);                                        */
 /*     >>PARM<< OPTION(*EVENTF);                                       */
-/*   >>END-COMPILE<<                                                   */
+/*   >>END-IMPORTANT<<                                                 */
 /*   >>EXECUTE<<                                                       */
 /*   >>CMD<<    CRTPGM       PGM(&LI/DSPSRCC   )  +                    */
 /*                           MODULE(&LI/DSPSRCR1  +                    */
@@ -52,11 +52,11 @@
 /* =================================================================== */
              PGM        PARM(&OBNMLB  +
                              &OBJTYPE +
-                             &DSPMDL  )
+                             &AUTOSLC )
 
              DCL        VAR(&OBNMLB  ) TYPE(*CHAR) LEN(20)
              DCL        VAR(&OBJTYPE ) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&DSPMDL  ) TYPE(*CHAR) LEN( 1)
+             DCL        VAR(&AUTOSLC ) TYPE(*CHAR) LEN( 1)
 
              DCL        VAR(&PGMI0100  ) TYPE(*CHAR) LEN(161)
              DCL        VAR(&PGMILEN   ) TYPE(*CHAR) LEN(  4)
@@ -97,7 +97,7 @@
              DCL        VAR(&ERRNBRTYP)  TYPE(*CHAR) LEN(4) +
                           VALUE(X'00000001')
              DCL        VAR(&ERRPGMMSGQ) TYPE(*CHAR) LEN(10) +
-                          VALUE('*')
+                          VALUE('*CTLBDY')
              DCL        VAR(&ERRSTKCTR)  TYPE(*CHAR) LEN(4) +
                           VALUE(X'00000001')
              DCL        VAR(&ERRCODE  )  TYPE(*CHAR) LEN(4) +
@@ -116,7 +116,7 @@
              CHGVAR     VAR(&OBLB) VALUE(%SST(&OBNMLB 11 10))
 
  /* Objekttyp ist *SERACH     */
-             IF         COND(&OBJTYPE *EQ *SEARCH) THEN(DO)
+             IF         COND(&OBJTYPE *EQ '*SEARCH') THEN(DO)
               CHGVAR     VAR(&STRPOS) VALUE(1)
  SearchLoop:
               CHGVAR     VAR(&OBJTYPE) +
@@ -128,9 +128,10 @@
                 GOTO       CMDLBL(SearchLoop)
                ENDDO
                ELSE       CMD(DO)
+                CHGVAR     VAR(&OBJTYPE) VALUE('*SEARCH')
                 SNDPGMMSG  MSGID(CPF9897) MSGF(*LIBL/QCPFMSG) +
-                           MSGDTA('Objekt' *BCAT &OBNM *BCAT 'vom Typ +
-                           *SEARCH nicht gefunden.') TOPGMQ(*PRV +
+                           MSGDTA('Object' *BCAT &OBNM *BCAT 'of type' +
+                           *BCAT &OBJTYPE *BCAT 'not found.') TOPGMQ(*PRV +
                            (*)) MSGTYPE(*ESCAPE)
                ENDDO
               ENDDO
@@ -138,6 +139,13 @@
              ENDDO
              ELSE       CMD(DO)
  /* Objekttyp wurde angegeben */
+              CHKOBJ     OBJ(&OBLB/&OBNM) OBJTYPE(&OBJTYPE)
+              MONMSG     MSGID(CPF0000) EXEC(DO)
+               SNDPGMMSG  MSGID(CPF9897) MSGF(*LIBL/QCPFMSG) +
+                          MSGDTA('Object' *BCAT &OBNM *BCAT 'of type' +
+                          *BCAT &OBJTYPE *BCAT 'not found.') TOPGMQ(*PRV +
+                          (*)) MSGTYPE(*ESCAPE)
+              ENDDO
              ENDDO
 
              RTVOBJD    OBJ(&OBLB/&OBNM) OBJTYPE(&OBJTYPE) +
@@ -175,7 +183,7 @@
              IF         COND(&PGMIPGMTYP *EQ 'B') THEN(DO)
               CALLPRC    PRC(DSPSRCR2) PARM(&OBNMLB  +
                                             &OBJTYPE +
-                                            &DSPMDL  +
+                                            &AUTOSLC +
                                             &QSRC    +
                                             &SRCM    +
                                             &RCD)

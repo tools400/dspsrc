@@ -73,8 +73,8 @@
                           LEN(1)                 +
                           RSTD(*YES)             +
                           DFT(*NO)               +
-                          SPCVAL((*YES 1)        +
-                                 (*NO  0))       +
+                          SPCVAL((*YES 0)        +
+                                 (*NO  1))       +
                           PMTCTL(*PMTRQS)        +
                           PROMPT('Display ILE module list')
 

@@ -42,6 +42,7 @@
      A                                      DSPSIZ(24  80 *DS3 +
      A                                             27 132 *DS4)
      A                                      PRINT
+     A                                      INDARA
       *
       *-------------------------------------*
      A          R PBSFL                     SFL

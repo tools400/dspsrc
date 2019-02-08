@@ -2,7 +2,7 @@
      /*                                                                     */
      /*  Documentation:                                                     */
      /*                                                                     */
-     /*  Utility . . . : DSPSRC                                        */
+     /*  Utility . . . : DSPSRC                                             */
      /*  Object  . . . : A_INSTALL  (PGM)                                   */
      /*  Source member : A_INSTALL                                          */
      /*  Source type . : CLLE                                               */
