@@ -27,16 +27,9 @@
       *                                                                     *
       * =================================================================== *
       * >>PRE-COMPILER<<                                                    *
-      *                                                                     *
       *   >>CRTCMD<< CRTDSPF      FILE(&LI/DSPSRCD) +                       *
-      *                           SRCFILE(&SL/&SF) +                        *
-      *                           SRCMBR(&SM);                              *
-      *                                                                     *
-      *   >>COMPILE<<                                                       *
-      *   >>END-COMPILE<<                                                   *
-      *                                                                     *
+      *                           SRCFILE(&SL/&SF) SRCMBR(&SM);             *
       *   >>EXECUTE<<                                                       *
-      *                                                                     *
       * >>END-PRE-COMPILER<<                                                *
       * =================================================================== *
       *%%EC

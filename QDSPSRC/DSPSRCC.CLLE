@@ -27,8 +27,7 @@
 /* =================================================================== */
 /* >>PRE-COMPILER<<                                                    */
 /*   >>CRTCMD<< CRTCLMOD     MODULE(&LI/&OB) +                         */
-/*                           SRCFILE(&SL/&SF) +                        */
-/*                           SRCMBR(&SM);                              */
+/*                           SRCFILE(&SL/&SF) SRCMBR(&SM);             */
 /*   >>IMPORTANT<<                                                     */
 /*     >>PARM<< DBGVIEW(*LIST);                                        */
 /*     >>PARM<< OPTION(*EVENTF);                                       */

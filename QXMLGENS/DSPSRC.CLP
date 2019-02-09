@@ -106,11 +106,6 @@
                           XTOSRCF(QDSPSRC   ) XOBJTYPE(*CMD    ) +
                           XGENCRT(*NO ) XPARAM(*BLANK)
 
-             XMLGENMBR  XMBR(QCMDEXC   ) XMBRATR(RPGLE ) +
-                          XFROMSRCF(QDSPSRC   ) XFROMSRCL(TOOLS400) +
-                          XTOSRCF(QDSPSRC   ) XOBJTYPE(*CMD    ) +
-                          XGENCRT(*NO ) XPARAM(*BLANK)
-
              XMLGENMBR  XMBR(QBNLPGMI  ) XMBRATR(RPGLE ) +
                           XFROMSRCF(QDSPSRC   ) XFROMSRCL(TOOLS400) +
                           XTOSRCF(QDSPSRC   ) XOBJTYPE(*CMD    ) +
@@ -121,7 +116,17 @@
                           XTOSRCF(QDSPSRC   ) XOBJTYPE(*CMD    ) +
                           XGENCRT(*NO ) XPARAM(*BLANK)
 
+             XMLGENMBR  XMBR(QCMDEXC   ) XMBRATR(RPGLE ) +
+                          XFROMSRCF(QDSPSRC   ) XFROMSRCL(TOOLS400) +
+                          XTOSRCF(QDSPSRC   ) XOBJTYPE(*CMD    ) +
+                          XGENCRT(*NO ) XPARAM(*BLANK)
+
              XMLGENMBR  XMBR(QUSRSPC   ) XMBRATR(RPGLE ) +
+                          XFROMSRCF(QDSPSRC   ) XFROMSRCL(TOOLS400) +
+                          XTOSRCF(QDSPSRC   ) XOBJTYPE(*CMD    ) +
+                          XGENCRT(*NO ) XPARAM(*BLANK)
+
+             XMLGENMBR  XMBR(TYPES_H   ) XMBRATR(RPGLE ) +
                           XFROMSRCF(QDSPSRC   ) XFROMSRCL(TOOLS400) +
                           XTOSRCF(QDSPSRC   ) XOBJTYPE(*CMD    ) +
                           XGENCRT(*NO ) XPARAM(*BLANK)

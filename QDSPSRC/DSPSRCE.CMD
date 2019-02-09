@@ -26,19 +26,14 @@
 /*                                                                     */
 /* =================================================================== */
 /* >>PRE-COMPILER<<                                                    */
-/*                                                                     */
 /*   >>CRTCMD<< CRTCMD       CMD(&LI/DSPSRC) +                         */
-/*                           SRCFILE(&SL/&SF) +                        */
-/*                           SRCMBR(&SM);                              */
-/*                                                                     */
-/*   >>COMPILE<<                                                       */
+/*                           SRCFILE(&SL/&SF) SRCMBR(&SM);             */
+/*   >>IMPORTANT<<                                                     */
 /*     >>PARM<< PGM(*LIBL/DSPSRCC);                                    */
 /*     >>PARM<< HLPPNLGRP(*LIBL/DSPSRCP);                              */
 /*     >>PARM<< HLPID(DSPSRC);                                         */
-/*   >>END-COMPILE<<                                                   */
-/*                                                                     */
+/*   >>END-IMPORTANT<<                                                 */
 /*   >>EXECUTE<<                                                       */
-/*                                                                     */
 /* >>END-PRE-COMPILER<<                                                */
 /* =================================================================== */
 /*                                                                     */
