@@ -21,7 +21,7 @@
 .*=====================================================================*
 .*  History:                                                           *
 .*                                                                     *
-.*  Datum       Name          Änderung                                 *
+.*  Datum       Name          Ã„nderung                                 *
 .*  ----------  ------------  ---------------------------------------  *
 .*                                                                     *
 .*=====================================================================*
@@ -40,7 +40,7 @@
 :IMHELP name='DSPSRC/DSPMOD    '.
 :EHELP.
 .*--------------------------------------------------------------------
-.* Hilfetext für den Befehl
+.* Hilfetext fÃ¼r den Befehl
 .*--------------------------------------------------------------------
 :HELP NAME='DSPSRC'.
 Quellenteildatei anzeigen (DSPSRC) - Hilfe
@@ -52,12 +52,12 @@ erstellt worden ist.
 Bei ILE-Programmen wird die Quellenteildatei des Moduls angezeigt. Wenn
 ein ILE-Programm aus mehreren Modulen erstellt worden ist, dann wird
 eine Liste der Module angezeigt und das anzuzeigende Modul kann aus
-der Modulliste ausgewählt werden.
+der Modulliste ausgewÃ¤hlt werden.
 .*
 :EHELP.
 .*
 .*--------------------------------------------------------------------
-.* Hilfetext für Schlüsselwort OBJ
+.* Hilfetext fÃ¼r SchlÃ¼sselwort OBJ
 .*--------------------------------------------------------------------
 :HELP name='DSPSRC/OBJ       '.
 Objekt - Hilfe
@@ -73,39 +73,39 @@ Quellenteildatei angezeigt werden soll.
 :PD.Name der Datei.
 :EPARML.
 :P.
-Gültige Bibliothekswerte sind:
+GÃ¼ltige Bibliothekswerte sind:
 :P.
 :PARML.
 :PT.:PK DEF.*LIBL:EPK.
-:PD.Objekt wird über die Bibliotheksliste gesucht.
+:PD.Objekt wird Ã¼ber die Bibliotheksliste gesucht.
 :PT.:PV.Bibliothek:EPV.
-:PD.Name der Bibliothek, welche das Objekt enthält.
+:PD.Name der Bibliothek, welche das Objekt enthÃ¤lt.
 :EPARML.
 .*
 :EHELP.
 .*
 .*--------------------------------------------------------------------
-.* Hilfetext für Schlüsselwort OBJTYPE
+.* Hilfetext fÃ¼r SchlÃ¼sselwort OBJTYPE
 .*--------------------------------------------------------------------
 :HELP name='DSPSRC/OBJTYPE   '.
 Objektart - Hilfe
 :XH3.Objektart (OBJTYPE)
 :P.
-Gibt die Art des Objekts an. Um eine vollständige Liste der Objektarten
-zu erhalten, den Positionsanzeiger in das Feld der Bedienerführung
-:HP2.Objektart:EHP2. (Parameter OBJTYPE) bewegen und F4 drücken.
+Gibt die Art des Objekts an. Um eine vollstÃ¤ndige Liste der Objektarten
+zu erhalten, den Positionsanzeiger in das Feld der BedienerfÃ¼hrung
+:HP2.Objektart:EHP2. (Parameter OBJTYPE) bewegen und F4 drÃ¼cken.
 .*
 :IMHELP name='COM/OPTPARM'.
 .*
 :PARML.
 :PT.:PV.Objektart:EPV.
-:PD.Den Wert für die Objektart angeben.
+:PD.Den Wert fÃ¼r die Objektart angeben.
 :EPARML.
 .*
 :EHELP.
 .*
 .*--------------------------------------------------------------------
-.* Hilfetext für Schlüsselwort DSPMOD
+.* Hilfetext fÃ¼r SchlÃ¼sselwort DSPMOD
 .*--------------------------------------------------------------------
 :HELP name='DSPSRC/DSPMOD    '.
 ILE-Module anzeigen - Hilfe
@@ -157,7 +157,7 @@ Dieser Parameter ist optional.
 .*=====================================
 :HELP NAME='COM/VALUES'.
 :P.
-Mögliche Werte sind:
+MÃ¶gliche Werte sind:
 :EHELP.
 .*
 :EPNLGRP.

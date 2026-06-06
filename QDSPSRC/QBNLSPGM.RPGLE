@@ -1,63 +1,68 @@
+**free
 
-       // List ILE service program information API
-     d QBNLSPGM        pr                  ExtPgm('QBNLSPGM')
-     d   usrSpc                      20a   Const
-     d   fmt                          8a   Const
-     d   srvPgm                      20a   Const
-     d   errors                   32766a   Options(*VarSize) NoOpt
+// List ILE service program information API
+dcl-pr QBNLSPGM extpgm('QBNLSPGM');
+  usrSpc char(20) const;
+  fmt    char(8) const;
+  srvPgm char(20) const;
+  errors char(32766) options(*varsize) noopt;
+end-pr;
 
-       // Structure of an entry in a QBNLSPGM list.
-     d SPGL0100_t      ds                  Qualified Based(template)
-     d  srvPgm                       10a
-     d  srvPgmLib                    10a
-     d  mod                          10a
-     d  modLib                       10a
-     d  srcFile                      10a
-     d  srcLib                       10a
-     d  srcMbr                       10a
-     d  modAttr                      10a
-     d  modCrtDatTim                 13a
-     d  srcUpdDatTim                 13a
-     d  srtSeqTbl                    10a
-     d  srtSeqTblLib                 10a
-     d  langId                       10a
-     d  optLvl                       10i 0
-     d  maxOptLvl                    10i 0
-     d  dbgDta                       10a
-     d  rlsCrtOn                      6a
-     d  rlsCrtFor                     6a
-     d  reserved_1                   20a
-     d  usrModInd                     1a
-     d  licPgm                       13a
-     d  ptfNbr                        5a
-     d  aparId                        6a
-     d  crtDta                        1a
-     d  modCcsid                     10i 0
-     d  objCtlLvl                     8a
-     d  enablePrfCol                  1a
-     d  profilingDta                 10a
-     d  reserved_2                    1a
-      *   ...
+// Structure of an entry in a QBNLSPGM list.
+dcl-ds SPGL0100_t qualified based(template);
+  srvPgm       char(10);
+  srvPgmLib    char(10);
+  mod          char(10);
+  modLib       char(10);
+  srcFile      char(10);
+  srcLib       char(10);
+  srcMbr       char(10);
+  modAttr      char(10);
+  modCrtDatTim char(13);
+  srcUpdDatTim char(13);
+  srtSeqTbl    char(10);
+  srtSeqTblLib char(10);
+  langId       char(10);
+  optLvl       int(10);
+  maxOptLvl    int(10);
+  dbgDta       char(10);
+  rlsCrtOn     char(6);
+  rlsCrtFor    char(6);
+  reserved_1   char(20);
+  usrModInd    char(1);
+  licPgm       char(13);
+  ptfNbr       char(5);
+  aparId       char(6);
+  crtDta       char(1);
+  modCcsid     int(10);
+  objCtlLvl    char(8);
+  enablePrfCol char(1);
+  profilingDta char(10);
+  reserved_2   char(1);
+//   ...
+end-ds;
 
-       // Structure of an entry in a QBNLSPGM list.
-     d SPGL0600_t      ds                  Qualified Based(template)
-     d  srvPgmName                   10a
-     d  srvPgmLib                    10a
-     d  ccsid                        10i 0
-     d  procNmSize                   10i 0
-     d  procNm                      256a
-     d  usesArgOpt                   10a
+// Structure of an entry in a QBNLSPGM list.
+dcl-ds SPGL0600_t qualified based(template);
+  srvPgmName char(10);
+  srvPgmLib  char(10);
+  ccsid      int(10);
+  procNmSize int(10);
+  procNm     char(256);
+  usesArgOpt char(10);
+end-ds;
 
-       // Structure of an entry in a QBNLSPGM list.
-     d SPGL0610_t      ds                  Qualified Based(template)
-        // Size of this entry. Each entry has a different size.
-     d  size                         10i 0
-     d  srvPgmName                   10a
-     d  srvPgmLib                    10a
-     d  ccsid                        10i 0
-     d  procNmOff                    10i 0
-     d  procNmSize                   10i 0
-     d  usesArgOpt                   10a
-      *   char(*)   -   Reserved
-      *   char(*)   -   Long procedure export name
+// Structure of an entry in a QBNLSPGM list.
+dcl-ds SPGL0610_t qualified based(template);
+  // Size of this entry. Each entry has a different size.
+  size       int(10);
+  srvPgmName char(10);
+  srvPgmLib  char(10);
+  ccsid      int(10);
+  procNmOff  int(10);
+  procNmSize int(10);
+  usesArgOpt char(10);
+//   char(*)   -   Reserved
+//   char(*)   -   Long procedure export name
+end-ds;
 

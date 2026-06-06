@@ -1,131 +1,132 @@
-      /if not defined(WORKSTN)
-      /define WORKSTN
-      *
-      *  Key pressed
-     d keyPressed_t    s              1a   based(pDummy)
-      *
-      *  Workstation information data structure
-     d workstn_infds_t...
-     d                 ds                  qualified               based(pDummy)
-     d  open                   9      9A
-     d  status                11     15S 0
-     d  AID                  369    369A
-      *
-      *  Command keys
-     d cKeyF1          c                   CONST(X'31')
-     d cKeyF2          c                   CONST(X'32')
-     d cKeyF3          c                   CONST(X'33')
-     d cKeyF4          c                   CONST(X'34')
-     d cKeyF5          c                   CONST(X'35')
-     d cKeyF6          c                   CONST(X'36')
-     d cKeyF7          c                   CONST(X'37')
-     d cKeyF8          c                   CONST(X'38')
-     d cKeyF9          c                   CONST(X'39')
-     d cKeyF10         c                   CONST(X'3A')
-     d cKeyF11         c                   CONST(X'3B')
-     d cKeyF12         c                   CONST(X'3C')
-     d cKeyF13         c                   CONST(X'B1')
-     d cKeyF14         c                   CONST(X'B2')
-     d cKeyF15         c                   CONST(X'B3')
-     d cKeyF16         c                   CONST(X'B4')
-     d cKeyF17         c                   CONST(X'B5')
-     d cKeyF18         c                   CONST(X'B6')
-     d cKeyF19         c                   CONST(X'B7')
-     d cKeyF20         c                   CONST(X'B8')
-     d cKeyF21         c                   CONST(X'B9')
-     d cKeyF22         c                   CONST(X'BA')
-     d cKeyF23         c                   CONST(X'BB')
-     d cKeyF24         c                   CONST(X'BC')
-      *
-     d cKeyClear       c                   CONST(X'BD')
-     d cKeyDelete      c                   CONST(X'BD')
-      *
-     d cKeyEnter       c                   CONST(X'F1')
-      *          Nicht definiert                   F2
-     d cKeyHelp        c                   CONST(X'F3')
-     d cKeyPageDown    c                   CONST(X'F4')
-     d cKeyPageUp      c                   CONST(X'F5')
-     d cKeyPrintScr    c                   CONST(X'F6')
-      *          Nicht definiert                   F7
-     d cKeyReset       c                   CONST(X'F8')
-      *
-     d cKeyLightPen    c                   CONST(X'3F')
-      *
-     d cSflFold        c                   CONST(*off)
-     d cSflDrop        c                   CONST(*on )
-      *
-      *  5250 color codes
-      *------------------------------------------------------*
-      * Green
-     d c5250_GRN       c                   CONST(X'20')
-      * Green/Reverse
-     d c5250_GRNR      c                   CONST(X'21')
-      * Green/Underscore
-     d c5250_GRNU      c                   CONST(X'24')
-      * Green/Underscore/Reverse
-     d c5250_GRNUR     c                   CONST(X'25')
-      *------------------------------------------------------*
-      * White
-     d c5250_WHT       c                   CONST(X'22')
-      * White/Reverse
-     d c5250_WHTR      c                   CONST(X'23')
-      * White/Underscore
-     d c5250_WHTU      c                   CONST(X'26')
-      *------------------------------------------------------*
-      * Red
-     d c5250_RED       c                   CONST(X'28')
-      * Red/Reverse
-     d c5250_REDR      c                   CONST(X'29')
-      * Red/Blink
-     d c5250_REDB      c                   CONST(X'2A')
-      * Red/Reverse/Blink
-     d c5250_REDRB     c                   CONST(X'2B')
-      * Red/Underscore
-     d c5250_REDU      c                   CONST(X'2C')
-      * Red/Underscore/Reverse
-     d c5250_REDUR     c                   CONST(X'2D')
-      * Red/Underscore/Blink
-     d c5250_REDUB     c                   CONST(X'2E')
-      *------------------------------------------------------*
-      * Turquoise/Column Separators
-     d c5250_TRQC      c                   CONST(X'30')
-      * Turquoise/Column Separators/Reverse
-     d c5250_TRQCR     c                   CONST(X'31')
-      * Turquoise/Underscore
-     d c5250_TRQU      c                   CONST(X'34')
-      * Turquoise/Underscore/Reverse
-     d c5250_TRQUR     c                   CONST(X'35')
-      *------------------------------------------------------*
-      * Yellow/Column Separators
-     d c5250_YLWC      c                   CONST(X'32')
-      * Yellow/Column Separators/Reverse
-     d c5250_YLWCR     c                   CONST(X'33')
-      * Yellow/Underscore
-     d c5250_YLWU      c                   CONST(X'36')
-      *------------------------------------------------------*
-      * Pink
-     d c5250_PNK       c                   CONST(X'38')
-      * Pink/Reverse
-     d c5250_PNKR      c                   CONST(X'39')
-      * Pink/Underscore
-     d c5250_PNKU      c                   CONST(X'3C')
-      * Pink/Underscore/Reverse
-     d c5250_PNKUR     c                   CONST(X'3D')
-      *------------------------------------------------------*
-      * Blue
-     d c5250_BLU       c                   CONST(X'3A')
-      * Blue/Reverse
-     d c5250_BLUR      c                   CONST(X'3B')
-      * Blue/Underscore
-     d c5250_BLUU      c                   CONST(X'3E')
-      *------------------------------------------------------*
-      * Nondisplay
-     d c5250_ND1       c                   CONST(X'27')
-      * Nondisplay
-     d c5250_ND2       c                   CONST(X'2F')
-      * Nondisplay
-     d c5250_ND3       c                   CONST(X'37')
-      * Nondisplay
-     d c5250_ND4       c                   CONST(X'3F')
-      *
-      /endif
+**free
+/if not defined(WORKSTN)
+/define workstn
+
+//  Key pressed
+dcl-s keyPressed_t char(1) template;
+
+//  Workstation information data structure
+dcl-ds workstn_infds_t qualified template;
+  dcl-subf open char(1) pos(9);
+  status        zoned(5) pos(11);
+  AID           char(1) pos(369);
+end-ds;
+
+//  Command keys
+dcl-c cKeyF1 X'31';
+dcl-c cKeyF2 X'32';
+dcl-c cKeyF3 X'33';
+dcl-c cKeyF4 X'34';
+dcl-c cKeyF5 X'35';
+dcl-c cKeyF6 X'36';
+dcl-c cKeyF7 X'37';
+dcl-c cKeyF8 X'38';
+dcl-c cKeyF9 X'39';
+dcl-c cKeyF10 X'3A';
+dcl-c cKeyF11 X'3B';
+dcl-c cKeyF12 X'3C';
+dcl-c cKeyF13 X'B1';
+dcl-c cKeyF14 X'B2';
+dcl-c cKeyF15 X'B3';
+dcl-c cKeyF16 X'B4';
+dcl-c cKeyF17 X'B5';
+dcl-c cKeyF18 X'B6';
+dcl-c cKeyF19 X'B7';
+dcl-c cKeyF20 X'B8';
+dcl-c cKeyF21 X'B9';
+dcl-c cKeyF22 X'BA';
+dcl-c cKeyF23 X'BB';
+dcl-c cKeyF24 X'BC';
+
+dcl-c cKeyClear X'BD';
+dcl-c cKeyDelete X'BD';
+
+dcl-c cKeyEnter X'F1';
+//          Nicht definiert                   F2
+dcl-c cKeyHelp X'F3';
+dcl-c cKeyPageDown X'F4';
+dcl-c cKeyPageUp X'F5';
+dcl-c cKeyPrintScr X'F6';
+//          Nicht definiert                   F7
+dcl-c cKeyReset X'F8';
+
+dcl-c cKeyLightPen X'3F';
+
+dcl-c cSflFold *off;
+dcl-c cSflDrop *on;
+
+//  5250 color codes
+//------------------------------------------------------*
+// Green
+dcl-c c5250_GRN X'20';
+// Green/Reverse
+dcl-c c5250_GRNR X'21';
+// Green/Underscore
+dcl-c c5250_GRNU X'24';
+// Green/Underscore/Reverse
+dcl-c c5250_GRNUR X'25';
+//------------------------------------------------------*
+// White
+dcl-c c5250_WHT X'22';
+// White/Reverse
+dcl-c c5250_WHTR X'23';
+// White/Underscore
+dcl-c c5250_WHTU X'26';
+//------------------------------------------------------*
+// Red
+dcl-c c5250_RED X'28';
+// Red/Reverse
+dcl-c c5250_REDR X'29';
+// Red/Blink
+dcl-c c5250_REDB X'2A';
+// Red/Reverse/Blink
+dcl-c c5250_REDRB X'2B';
+// Red/Underscore
+dcl-c c5250_REDU X'2C';
+// Red/Underscore/Reverse
+dcl-c c5250_REDUR X'2D';
+// Red/Underscore/Blink
+dcl-c c5250_REDUB X'2E';
+//------------------------------------------------------*
+// Turquoise/Column Separators
+dcl-c c5250_TRQC X'30';
+// Turquoise/Column Separators/Reverse
+dcl-c c5250_TRQCR X'31';
+// Turquoise/Underscore
+dcl-c c5250_TRQU X'34';
+// Turquoise/Underscore/Reverse
+dcl-c c5250_TRQUR X'35';
+//------------------------------------------------------*
+// Yellow/Column Separators
+dcl-c c5250_YLWC X'32';
+// Yellow/Column Separators/Reverse
+dcl-c c5250_YLWCR X'33';
+// Yellow/Underscore
+dcl-c c5250_YLWU X'36';
+//------------------------------------------------------*
+// Pink
+dcl-c c5250_PNK X'38';
+// Pink/Reverse
+dcl-c c5250_PNKR X'39';
+// Pink/Underscore
+dcl-c c5250_PNKU X'3C';
+// Pink/Underscore/Reverse
+dcl-c c5250_PNKUR X'3D';
+//------------------------------------------------------*
+// Blue
+dcl-c c5250_BLU X'3A';
+// Blue/Reverse
+dcl-c c5250_BLUR X'3B';
+// Blue/Underscore
+dcl-c c5250_BLUU X'3E';
+//------------------------------------------------------*
+// Nondisplay
+dcl-c c5250_ND1 X'27';
+// Nondisplay
+dcl-c c5250_ND2 X'2F';
+// Nondisplay
+dcl-c c5250_ND3 X'37';
+// Nondisplay
+dcl-c c5250_ND4 X'3F';
+
+/endif

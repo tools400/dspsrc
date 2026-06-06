@@ -21,7 +21,7 @@
 /* =================================================================== */
 /*  History:                                                           */
 /*                                                                     */
-/*  Datum       Name          Änderung                                 */
+/*  Datum       Name          Ã„nderung                                 */
 /*  ----------  ------------  ---------------------------------------  */
 /*                                                                     */
 /* =================================================================== */
@@ -38,9 +38,9 @@
 /* =================================================================== */
 /*                                                                     */
 /*  Bei einer Erweiterung des Parameters OBJTYPE, bitte auch im        */
-/*  CL-Programm die Variable &TYPAVAIL entsprechend ändern.            */
-/*  Max. sind 10 Typen möglich. Danach muß die auch die Länge          */
-/*  von &TYPAVAIL sowie die Abfrage auf 100 geändert werden.           */
+/*  CL-Programm die Variable &TYPAVAIL entsprechend Ã¤ndern.            */
+/*  Max. sind 10 Typen mÃ¶glich. Danach muÃŸ die auch die LÃ¤nge          */
+/*  von &TYPAVAIL sowie die Abfrage auf 100 geÃ¤ndert werden.           */
 /*                                                                     */
 /* =================================================================== */
 

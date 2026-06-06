@@ -21,7 +21,7 @@
       *=====================================================================*
       *  History:                                                           *
       *                                                                     *
-      *  Datum       Name          Änderung                                 *
+      *  Datum       Name          Ã„nderung                                 *
       *  ----------  ------------  ---------------------------------------  *
       *  01.03.2007  Th.Raddatz    Added 'DSPATR(PC)' to SFPAU.             *
       *                                                                     *
@@ -84,17 +84,17 @@
      A                                 16  2'                                  -
      A                                                                  '
      A                                      DSPATR(UL)
-     A                                 17  2'F3/F12=zurück'
-     A                                 17 17'F5=neu aufblättern'
+     A                                 17  2'F3/F12=zurÃ¼ck'
+     A                                 17 17'F5=neu aufblÃ¤ttern'
       *
       *-------------------------------------*
      A          R PBLEER
      A                                      WINDOW(PBBOT)
      A                                      OVERLAY
-     A                                  8  8'(Keine Datensätze vorhanden)'
+     A                                  8  8'(Keine DatensÃ¤tze vorhanden)'
       *
       *-------------------------------------*
-      *  RMVWDW ZUM LÖSCHEN DES WINDOWS
+      *  RMVWDW ZUM LÃ–SCHEN DES WINDOWS
      A          R RMVWDW                    CLRL(*NO) OVERLAY FRCDTA
       *
       *-------------------------------------*

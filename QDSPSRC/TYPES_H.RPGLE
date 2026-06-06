@@ -1,29 +1,30 @@
-      /if not defined(TYPES_H)
-      /define TYPES_H
-      *
-     D DSPSRCR1...
-     D                 PR
-     D  i_qPgm                             const likeds(qObj_t)
-     D  i_option                      1A   const
-     D  o_count                      10P 0
-     D  o_module                    512A
-      *
-     D DSPSRCR2...
-     D                 PR
-     D  i_qObj                       20A   const
-     D  i_objType                    10A   const
-     D  i_autoSelect                   N   const
-     D  o_qSrcFile                               likeds(qObj_t)
-     D  o_srcMbr                     10A
-     D  o_rc                         10A
-      *
-     D DSPSRCR3...
-     D                 PR
-     D  i_qSrvPgm                          const likeds(qObj_t)
-     D  i_option                      1A   const
-     D  o_count                      10P 0
-     D  o_module                    512A
-      *
-      /copy qdspsrc,fdqobj
-      *
-      /endif
+**free
+/if not defined(TYPES_H)
+/define TYPES_H
+
+dcl-pr DSPSRCR1;
+  i_qPgm   likeds(qObj_t) const;
+  i_option char(1) const;
+  o_count  packed(10);
+  o_module char(512);
+end-pr;
+
+dcl-pr DSPSRCR2;
+  i_qObj       char(20) const;
+  i_objType    char(10) const;
+  i_autoSelect ind const;
+  o_qSrcFile   likeds(qObj_t);
+  o_srcMbr     char(10);
+  o_rc         char(10);
+end-pr;
+
+dcl-pr DSPSRCR3;
+  i_qSrvPgm likeds(qObj_t) const;
+  i_option  char(1) const;
+  o_count   packed(10);
+  o_module  char(512);
+end-pr;
+
+/copy qdspsrc,fdqobj
+
+/endif

@@ -1,34 +1,35 @@
-      /if not defined(genLstHdr_t)
-      /define genLstHdr_t
-      * ============================================================= *
-      *   Generic List Header for List APIs                           *
-      *===============================================================*
-      *
-     d genLstHdr_t...
-     d                 ds                  qualified               based(pDummy)
-     d  userArea               1     64A
-     d  size                  65     68I 0
-     d  release               69     72A
-     d  format                73     80A
-     d  API                   81     90A
-     d  crtDate               91    103A
-     d  infStat              104    104A
-     d  sizeUsrSpc           105    108I 0
-     d  ofsInpSct            109    112I 0
-     d  sizeInpSct           113    116I 0
-     d  ofsHdrSct            117    120I 0
-     d  sizeHdrSct           121    124I 0
-     d  ofsLstSct            125    128I 0
-     d  sizeLstSct           129    132I 0
-     d  numE                 133    136I 0
-     d  sizeE                137    140I 0
-     d  CCSID                141    144I 0
-     d  cntryID              145    146A
-     d  lngID                147    149A
-     d  subLstInd            150    150A
-     d  reserved_01          151    192A
-      *  Additional Format 0300 Fields
-     d  APIEntryPoint        193    448A
-     d  reserved_02          449    576A
-      *
-      /endif
+**free
+/if not defined(genLstHdr_t)
+/define genLstHdr_t
+// ============================================================= *
+//   Generic List Header for List APIs                           *
+//===============================================================*
+
+dcl-ds genLstHdr_t qualified template;
+  userArea      char(64);
+  size          int(10);
+  release       char(4);
+  format        char(8);
+  API           char(10);
+  crtDate       char(13);
+  infStat       char(1);
+  sizeUsrSpc    int(10);
+  ofsInpSct     int(10);
+  sizeInpSct    int(10);
+  ofsHdrSct     int(10);
+  sizeHdrSct    int(10);
+  ofsLstSct     int(10);
+  sizeLstSct    int(10);
+  numE          int(10);
+  sizeE         int(10);
+  CCSID         int(10);
+  cntryID       char(2);
+  lngID         char(3);
+  subLstInd     char(1);
+  reserved_01   char(42);
+  //  Additional Format 0300 Fields
+  APIEntryPoint char(256);
+  reserved_02   char(128);
+end-ds;
+
+/endif

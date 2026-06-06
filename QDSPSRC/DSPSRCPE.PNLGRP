@@ -21,7 +21,7 @@
 .*=====================================================================*
 .*  History:                                                           *
 .*                                                                     *
-.*  Datum       Name          Änderung                                 *
+.*  Datum       Name          Ã„nderung                                 *
 .*  ----------  ------------  ---------------------------------------  *
 .*                                                                     *
 .*=====================================================================*
@@ -40,7 +40,7 @@
 :IMHELP name='DSPSRC/DSPMOD    '.
 :EHELP.
 .*--------------------------------------------------------------------
-.* Hilfetext für den Befehl
+.* Hilfetext fÃ¼r den Befehl
 .*--------------------------------------------------------------------
 :HELP NAME='DSPSRC'.
 Display Source Code (DSPSRC) - Help
@@ -55,7 +55,7 @@ the list of modules to select the one to open.
 :EHELP.
 .*
 .*--------------------------------------------------------------------
-.* Hilfetext für Schlüsselwort OBJ
+.* Hilfetext fÃ¼r SchlÃ¼sselwort OBJ
 .*--------------------------------------------------------------------
 :HELP name='DSPSRC/OBJ       '.
 Obcekt - Help
@@ -84,7 +84,7 @@ until the first match is found.
 :EHELP.
 .*
 .*--------------------------------------------------------------------
-.* Hilfetext für Schlüsselwort OBJTYPE
+.* Hilfetext fÃ¼r SchlÃ¼sselwort OBJTYPE
 .*--------------------------------------------------------------------
 :HELP name='DSPSRC/OBJTYPE   '.
 Object type - Help
@@ -106,7 +106,7 @@ source member is displayed.
 :EHELP.
 .*
 .*--------------------------------------------------------------------
-.* Hilfetext für Schlüsselwort DSPMOD
+.* Hilfetext fÃ¼r SchlÃ¼sselwort DSPMOD
 .*--------------------------------------------------------------------
 :HELP name='DSPSRC/DSPMOD    '.
 Display ILE module list - Help

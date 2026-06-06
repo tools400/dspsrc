@@ -51,7 +51,7 @@
       appblddate CDATA #REQUIRED
      >
      ]>
-<upload  appname="DSPSRC"  appauthor="Thomas Raddatz"  appblddate=" 2/09/2019">
+<upload  appname="DSPSRC"  appauthor="Thomas Raddatz"  appblddate=" 6/06/2026">
 <install_instructions><![CDATA[
      *----------------------------------------------------------------      ------
      *  1. Upload entire XML to your AS/400 to a source file 112 long, into any mbr
@@ -1289,7 +1289,7 @@ mbrtext =  "DSPSRC - Installer                                "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
      /* =================================================================== */
      /*                                                                     */
@@ -1495,7 +1495,7 @@ mbrtext =  "DSPSRC - Readme                                   "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
 DSPSRC - A Tools/400 Utility
 ----------------------------
@@ -1529,16 +1529,15 @@ mbrtext =  "Copyright information                             "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      /if not defined(COPYRIGHT_DSPEC)
-     H COPYRIGHT('V1.3.1 - 08.02.2019 - mailto: thomas.raddatz@tools400.de')
-      /eof
-      /endif
-     D DSPSRC_VERSION...
-     D                 C                   '1.3.1'
-     D DSPSRC_DATE...
-     D                 C                   '08.02.2019'
+**free
+/if not defined(COPYRIGHT_DSPEC)
+ctl-opt copyright('V1.4 - 06.06.2026 - mailto: thomas.raddatz@tools400.de');
+/eof
+/endif
+dcl-c DSPSRC_VERSION '1.4';
+dcl-c DSPSRC_DATE '06.06.2026';
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -1552,7 +1551,7 @@ mbrtext =  "Display Source Code - CPP                         "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
 /* =================================================================== */
 /*                                                                     */
@@ -1816,7 +1815,7 @@ mbrtext =  "Display Source Code - Eng                         "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
       *%%TS  SD  20020603  124632  RADDATZ     REL-V4R4M0  5769-PW1
       * =================================================================== *
@@ -1943,7 +1942,7 @@ mbrtext =  "Display Source Code - Ger                         "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
       * =================================================================== *
       *                                                                     *
@@ -2062,7 +2061,7 @@ mbrtext =  "Display Source Code - Eng                         "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
 /* =================================================================== */
 /*                                                                     */
@@ -2157,7 +2156,7 @@ mbrtext =  "Display Source Code - Ger                         "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
 /* =================================================================== */
 /*                                                                     */
@@ -2252,7 +2251,7 @@ mbrtext =  "Display Source Code - Eng                         "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
 .*=====================================================================*
 .*                                                                     *
@@ -2431,7 +2430,7 @@ mbrtext =  "Display Source Code - Ger                         "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
 .*=====================================================================*
 .*                                                                     *
@@ -2609,230 +2608,227 @@ mbrtext =  "Display Source Code - list program modules        "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-       //=====================================================================*
-       //                                                                     *
-       //  Kurzdokumentation :                                                *
-       //                                                                     *
-       //  Bereich . . . : DSPSRC                                             *
-       //  Objekt  . . . : DSPSRCR1                                           *
-       //  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
-       //  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
-       //  Datum . . . . : 25.07.2001                                         *
-       //                                                                     *
-       //=====================================================================*
-       //                                                                     *
-       //  This software is free software, you can redistribute it and/or     *
-       //  modify it under the terms of the GNU General Public License (GPL)  *
-       //  as published by the Free Software Foundation.                      *
-       //                                                                     *
-       //  See GNU General Public License for details.                        *
-       //          http://www.opensource.org                                  *
-       //          http://www.opensource.org/licenses/gpl-license.html        *
-       //                                                                     *
-       //=====================================================================*
-       //  History:                                                           *
-       //                                                                     *
-       //  Datum       Name          Änderung                                 *
-       //  ----------  ------------  ---------------------------------------  *
-       //  10.01.2003  Th.Raddatz    Removed special character § from source. *
-       //  08.02.2019  Th.Raddatz    Converted to /free.                      *
-       //                                                                     *
-       //=====================================================================*
-       // >>PRE-COMPILER<<                                                    *
-       //   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
-       //                           SRCFILE(&SL/&SF) +                        *
-       //                           SRCMBR(&SM);                              *
-       //   >>IMPORTANT<<                                                     *
-       //     >>PARM<< TRUNCNBR(*NO);                                         *
-       //     >>PARM<< DBGVIEW(*LIST);                                        *
-       //     >>PARM<< OPTION(*EVENTF);                                       *
-       //   >>END-IMPORTANT<<                                                 *
-       //   >>EXECUTE<<                                                       *
-       // >>END-PRE-COMPILER<<                                                *
-       //=====================================================================*
-       //                                                                     *
-       //  INPUT-Parameter:                                                   *
-       //  ================                                                   *
-       //                                                                     *
-       //  i_qPgm    Qualifizierte Programmname                               *
-       //             1 - 10:  pgm                                            *
-       //            11 - 20:  library                                        *
-       //                        *ALL        Alle Bibliotheken auf dem System *
-       //                        *ALLUSR     Alle nicht-IBM Bibliotheken      *
-       //                        *CURLIB     Aktuelle Bibliothek des Jobs     *
-       //                        *LIBL       kompl. Bibliotheksliste          *
-       //                        *USRLIBL    Benutzerteil der Bibl.Liste      *
-       //                                                                     *
-       //  i_option  Funktionscode                                            *
-       //              1 - erstellen Liste                   CREATE           *
-       //              5 - lesen nächsten Eintrag            READ             *
-       //              4 - löschen Liste                     DELETE           *
-       //                                                                     *
-       //  OUTPUT-Parameter:                                                  *
-       //  =================                                                  *
-       //                                                                     *
-       //  o_count   Anzahl noch verfügbarer Einträge                         *
-       //  o_module  Eintragsdaten                                            *
-       //                                                                     *
-       //=====================================================================*
-     H NOMAIN
-      /COPY QDSPSRC,H_SPEC
-      /COPY QDSPSRC,COPYRIGHT
+**free
+//=====================================================================*
+//                                                                     *
+//  Kurzdokumentation :                                                *
+//                                                                     *
+//  Bereich . . . : DSPSRC                                             *
+//  Objekt  . . . : DSPSRCR1                                           *
+//  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
+//  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+//  Datum . . . . : 25.07.2001                                         *
+//                                                                     *
+//=====================================================================*
+//                                                                     *
+//  This software is free software, you can redistribute it and/or     *
+//  modify it under the terms of the GNU General Public License (GPL)  *
+//  as published by the Free Software Foundation.                      *
+//                                                                     *
+//  See GNU General Public License for details.                        *
+//          http://www.opensource.org                                  *
+//          http://www.opensource.org/licenses/gpl-license.html        *
+//                                                                     *
+//=====================================================================*
+//  History:                                                           *
+//                                                                     *
+//  Datum       Name          Änderung                                 *
+//  ----------  ------------  ---------------------------------------  *
+//  10.01.2003  Th.Raddatz    Removed special character § from source. *
+//  08.02.2019  Th.Raddatz    Converted to /free.                      *
+//                                                                     *
+//=====================================================================*
+// >>PRE-COMPILER<<                                                    *
+//   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
+//                           SRCFILE(&SL/&SF) +                        *
+//                           SRCMBR(&SM);                              *
+//   >>IMPORTANT<<                                                     *
+//     >>PARM<< TRUNCNBR(*NO);                                         *
+//     >>PARM<< DBGVIEW(*LIST);                                        *
+//     >>PARM<< OPTION(*EVENTF);                                       *
+//   >>END-IMPORTANT<<                                                 *
+//   >>EXECUTE<<                                                       *
+// >>END-PRE-COMPILER<<                                                *
+//=====================================================================*
+//                                                                     *
+//  INPUT-Parameter:                                                   *
+//  ================                                                   *
+//                                                                     *
+//  i_qPgm    Qualifizierte Programmname                               *
+//             1 - 10:  pgm                                            *
+//            11 - 20:  library                                        *
+//                        *ALL        Alle Bibliotheken auf dem System *
+//                        *ALLUSR     Alle nicht-IBM Bibliotheken      *
+//                        *CURLIB     Aktuelle Bibliothek des Jobs     *
+//                        *LIBL       kompl. Bibliotheksliste          *
+//                        *USRLIBL    Benutzerteil der Bibl.Liste      *
+//                                                                     *
+//  i_option  Funktionscode                                            *
+//              1 - erstellen Liste                   CREATE           *
+//              5 - lesen nächsten Eintrag            READ             *
+//              4 - löschen Liste                     DELETE           *
+//                                                                     *
+//  OUTPUT-Parameter:                                                  *
+//  =================                                                  *
+//                                                                     *
+//  o_count   Anzahl noch verfügbarer Einträge                         *
+//  o_module  Eintragsdaten                                            *
+//                                                                     *
+//=====================================================================*
+ctl-opt nomain;
+/copy QDSPSRC,H_SPEC
+/copy QDSPSRC,COPYRIGHT
 
-     D lstHdr          DS                  likeds(genLstHdr_t) based(pLstHdr)
-     D pgml0100        DS                  likeds(PGML0100_t) based(pPgml0100)
-     D errCode         DS                  likeds(errCode_t)
+dcl-ds lstHdr likeds(genLstHdr_t) based(pLstHdr);
+dcl-ds pgml0100 likeds(PGML0100_t) based(pPgml0100);
+dcl-ds errCode likeds(errCode_t);
 
-      /copy qdspsrc,types_h
-      /copy qdspsrc,qusrspc
-      /copy qdspsrc,genlsthdr
-      /copy qdspsrc,fderrcode
-      /copy qdspsrc,qbnlpgmi
-      /copy qdspsrc,qcmdexc
+/copy qdspsrc,types_h
+/copy qdspsrc,qusrspc
+/copy qdspsrc,genlsthdr
+/copy qdspsrc,fderrcode
+/copy qdspsrc,qbnlpgmi
+/copy qdspsrc,qcmdexc
 
-     D qUsrSpc         DS                  likeds(qObj_t)
-     D numRecords      S             10I 0
-     D clCmd           S            512A   varying
+dcl-ds qUsrSpc likeds(qObj_t);
+dcl-s numRecords int(10);
+dcl-s clCmd varchar(512);
 
-     D existUserSpace...
-     D                 PR              n   extproc('existUserSpace')
-     D  i_qUsrSpc                          const likeds(qObj_t)
+dcl-pr existUserSpace ind extproc('existUserSpace');
+  i_qUsrSpc likeds(qObj_t) const;
+end-pr;
 
-       //*******************************************************************
-       //  Program entry point                                             *
-       //*******************************************************************
-     P DSPSRCR1...
-     P                 B                   export
-     D                 PI
-     D  i_qPgm                             const likeds(qObj_t)
-     D  i_option                      1A   const
-     D  o_count                      10P 0
-     D  o_module                    512A
-       //---------------------------------------------------*
-      /free
+//*******************************************************************
+//  Program entry point                                             *
+//*******************************************************************
+dcl-proc DSPSRCR1 export;
+  dcl-pi *n;
+    i_qPgm   likeds(qObj_t) const;
+    i_option char(1) const;
+    o_count  packed(10);
+    o_module char(512);
+  end-pi;
+  //---------------------------------------------------*
 
-       qUsrSpc.name = 'DSPSRC';
-       qUsrSpc.lib = 'QTEMP';
+  qUsrSpc.name = 'DSPSRC';
+  qUsrSpc.lib = 'QTEMP';
 
-       select;
-          //  Create module list
-       when (i_option = '1');
-          exsr CREATE;
-          //  Delete list
-       when (i_option = '4');
-          exsr DELETE;
-          //  Get next entry
-       when (i_option = '5');
-          exsr READ;
-       endsl;
+  select;
+  //  Create module list
+  when (i_option = '1');
+    exsr CREATE;
+  //  Delete list
+  when (i_option = '4');
+    exsr DELETE;
+  //  Get next entry
+  when (i_option = '5');
+    exsr READ;
+  endsl;
 
-       //====================================================*
-       //  CREATE --  Erstellen USRSPC und Liste             *
-       //----------------------------------------------------*
-       //  Erforderliche Änderungen für anderes List API     *
-       //    - evtl. Initialgröße des USRSPC                 *
-       //    - API Aufruf für Liste                          *
-       //====================================================*
-       begsr CREATE;
+  //====================================================*
+  //  CREATE --  Erstellen USRSPC und Liste             *
+  //----------------------------------------------------*
+  //  Erforderliche Änderungen für anderes List API     *
+  //    - evtl. Initialgröße des USRSPC                 *
+  //    - API Aufruf für Liste                          *
+  //====================================================*
+  begsr CREATE;
 
-          if (not existUserSpace(qUsrSpc));
-             QUSCRTUS(
-                qUsrSpc: 'TEMP': 2048: '': '*ALL': '');
-          endif;
+    if (not existUserSpace(qUsrSpc));
+      QUSCRTUS(
+         qUsrSpc: 'TEMP': 2048: '': '*ALL': '');
+    endif;
 
-          clear errCode;
-          errCode.bytPrv = %size(errCode);
+    clear errCode;
+    errCode.bytPrv = %size(errCode);
 
-          QBNLPGMI(
-            qUsrSpc: 'PGML0100': i_qPgm: errCode);
+    QBNLPGMI(
+      qUsrSpc: 'PGML0100': i_qPgm: errCode);
 
-          if (errCode.bytAvl > 0);
-             //  Fehler aufgetreten!
-             numRecords = 0;
-          else;
-             //  ermitteln Offset zu den Eintragsdaten
-             QUSPTRUS(qUsrSpc: pLstHdr);
+    if (errCode.bytAvl > 0);
+      //  Fehler aufgetreten!
+      numRecords = 0;
+    else;
+      //  ermitteln Offset zu den Eintragsdaten
+      QUSPTRUS(qUsrSpc: pLstHdr);
 
-             numRecords = lstHdr.numE;
-          endif;
+      numRecords = lstHdr.numE;
+    endif;
 
-          o_count = numRecords;
-          o_module = '';
+    o_count = numRecords;
+    o_module = '';
 
-       endsr;
+  endsr;
 
-       //====================================================*
-       //  DELETE --  Löschen USRSPC                         *
-       //----------------------------------------------------*
-       //  Erforderliche Änderungen für anderes List API     *
-       //    - *NONE                                         *
-       //====================================================*
-       begsr DELETE;
+  //====================================================*
+  //  DELETE --  Löschen USRSPC                         *
+  //----------------------------------------------------*
+  //  Erforderliche Änderungen für anderes List API     *
+  //    - *NONE                                         *
+  //====================================================*
+  begsr DELETE;
 
-          if (existUserSpace(qUsrSpc));
-             clCmd = 'DLTUSRSPC +
-                     USRSPC(' + %trim(qUsrSpc.lib) + '/'
-                              + %trim(qUsrSpc.name) + ')';
-             callp(e) QCMDEXC(clCmd: %len(clCmd));
-          endif;
+    if (existUserSpace(qUsrSpc));
+      clCmd = 'DLTUSRSPC +
+              USRSPC(' + %trim(qUsrSpc.lib) + '/'
+                       + %trim(qUsrSpc.name) + ')';
+      callp(e) QCMDEXC(clCmd: %len(clCmd));
+    endif;
 
-          o_count = 0;
-          o_module = '';
+    o_count = 0;
+    o_module = '';
 
-       endsr;
+  endsr;
 
-       //====================================================*
-       //  READ   --  Lesen nächsten Eintrag                 *
-       //----------------------------------------------------*
-       //  Erforderliche Änderungen für anderes List API     *
-       //    - *NONE                                         *
-       //====================================================*
-       begsr READ;
+  //====================================================*
+  //  READ   --  Lesen nächsten Eintrag                 *
+  //----------------------------------------------------*
+  //  Erforderliche Änderungen für anderes List API     *
+  //    - *NONE                                         *
+  //====================================================*
+  begsr READ;
 
-          o_count = -1;
-          o_module  = '';
+    o_count = -1;
+    o_module  = '';
 
-          if (numRecords > 0);
+    if (numRecords > 0);
 
-             pPgml0100 = pLstHdr + lstHdr.ofsLstSct +
-               ((lstHdr.numE - numRecords) *
-               lstHdr.sizeE);
-             numRecords = numRecords - 1;
+      pPgml0100 = pLstHdr + lstHdr.ofsLstSct +
+        ((lstHdr.numE - numRecords) *
+        lstHdr.sizeE);
+      numRecords = numRecords - 1;
 
-             o_count = numRecords;
-             o_module = pgml0100;
+      o_count = numRecords;
+      o_module = pgml0100;
 
-          endif;
+    endif;
 
-       endsr;
+  endsr;
 
-      /end-free
-     P                 E
+end-proc;
 
-       //====================================================*
-       //  Check user space existance                        *
-       //====================================================*
-     P existUserSpace...
-     P                 B
-     D                 PI              n
-     D  i_qUsrSpc                          const likeds(qObj_t)
-      /free
+//====================================================*
+//  Check user space existance                        *
+//====================================================*
+dcl-proc existUserSpace;
+  dcl-pi *n ind;
+    i_qUsrSpc likeds(qObj_t) const;
+  end-pi;
 
-       clCmd = 'CHKOBJ OBJ(' + %trim(qUsrSpc.lib) + '/'
-                             + %trim(qUsrSpc.name) + ') OBJTYPE(*USRSPC)';
+  clCmd = 'CHKOBJ OBJ(' + %trim(qUsrSpc.lib) + '/'
+                        + %trim(qUsrSpc.name) + ') OBJTYPE(*USRSPC)';
 
-       monitor;
-          QCMDEXC(clCmd: %len(clCmd));
-       on-error;
-          return *off;
-       endmon;
+  monitor;
+    QCMDEXC(clCmd: %len(clCmd));
+  on-error;
+    return *off;
+  endmon;
 
-       return *on;
+  return *on;
 
-      /end-free
-     P                 E
+end-proc;
 
 ]]>  </copysrc>
 </mbr>
@@ -2847,379 +2843,379 @@ mbrtext =  "Display Source Code - select module               "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-       //=====================================================================*
-       //                                                                     *
-       //  Kurzdokumentation :                                                *
-       //                                                                     *
-       //  Bereich . . . : DSPSRC                                             *
-       //  Objekt  . . . : DSPSRCR2                                           *
-       //  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
-       //  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
-       //  Datum . . . . : 25.07.2001                                         *
-       //                                                                     *
-       //=====================================================================*
-       //                                                                     *
-       //  This software is free software, you can redistribute it and/or     *
-       //  modify it under the terms of the GNU General Public License (GPL)  *
-       //  as published by the Free Software Foundation.                      *
-       //                                                                     *
-       //  See GNU General Public License for details.                        *
-       //          http://www.opensource.org                                  *
-       //          http://www.opensource.org/licenses/gpl-license.html        *
-       //                                                                     *
-       //=====================================================================*
-       //  History:                                                           *
-       //                                                                     *
-       //  Datum       Name          Änderung                                 *
-       //  ----------  ------------  ---------------------------------------  *
-       //  10.01.2003  Th.Raddatz    Removed special character § from source. *
-       //  01.03.2007  Th.Raddatz    Wrong option in module selection subfile *
-       //                            was not correctly processed. Added       *
-       //                            'DSPATR(PC)' to SFPAU.                   *
-       //  08.02.2019  Th.Raddatz    Converted to /free.                      *
-       //                                                                     *
-       //=====================================================================*
-       // >>PRE-COMPILER<<                                                    *
-       //   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
-       //                           SRCFILE(&SL/&SF) +                        *
-       //                           SRCMBR(&SM);                              *
-       //   >>IMPORTANT<<                                                     *
-       //     >>PARM<< TRUNCNBR(*NO);                                         *
-       //     >>PARM<< DBGVIEW(*LIST);                                        *
-       //     >>PARM<< OPTION(*EVENTF);                                       *
-       //   >>END-IMPORTANT<<                                                 *
-       //   >>EXECUTE<<                                                       *
-       // >>END-PRE-COMPILER<<                                                *
-       //=====================================================================*
-     H NOMAIN
-      /COPY QDSPSRC,H_SPEC
-      /COPY QDSPSRC,COPYRIGHT
-
-     FDSPSRCD   CF   E             WORKSTN USROPN
-     F                                     INFDS(WORKSTN)
-     F                                     SFILE(PBSFL:RECNO)
-     F                                     indds(wrkstn_flags)
-
-      /copy qdspsrc,types_h
-      /copy qdspsrc,workstn
-      /copy qdspsrc,qbnlspgm
-      /copy qdspsrc,qbnlpgmi
-
-     D wrkstn_flags    DS                  qualified
-     D sflDsp                 80     80n
-     D sflEnd                         1n
-     D sflDspCtl                      1n
-     D sflNxtChg                      1n
-     D sfpau_pc                       1n
-
-
-     D RECNO           S             10I 0
-
-     D WORKSTN         DS                  likeds(workstn_infds_t)
-
-     D spgl0100        DS                  likeds(spgl0100_t)
-     D pgml0100        DS                  likeds(pgml0100_t)
-
-     D module          DS                  qualified
-     D pgm                           10
-     D pgmLib                        10
-     D mod                           10
-     D modLib                        10
-     D srcFile                       10
-     D srcLib                        10
-     D srcMbr                        10
-
-     D isFound         S               n
-
-     D cTRUE           C                   CONST('1')
-     D cFALSE          C                   CONST('0')
-
-     D yCount          S             10p 0
-     D yModule         DS           512
-
-       //*******************************************************************
-       //  Program entry point                                             *
-       //*******************************************************************
-     P DSPSRCR2...
-     P                 B                   export
-     D                 PI
-     D  i_qObj                       20A   const
-     D  i_objType                    10A   const
-     D  i_autoSelect                   N   const
-     D  o_qSrcFile                               likeds(qObj_t)
-     D  o_srcMbr                     10A
-     D  o_rc                         10A
-       //---------------------------------------------------*
-      /free
-
-       //  Subfile record number
-       RECNO = 0;
-
-       //  "Not found"  flag
-       isFound = cFALSE;
-
-       o_rc = '';
-       o_qSrcFile = '';
-       o_srcMbr = '';
-
-       exsr CRTLST;
-
-       select;
-       //  No more entries available
-       when (yCount <= 0);
-          return;
-
-       //  Only one module found, select it automatically
-       when (yCount = 1 AND i_autoSelect);
-          exsr REDLST;
-          exsr FILLSF;
-          exsr FILLEL;
-          return;
-
-       //  More than one module available, let the user select
-       other;
-          OPEN DSPSRCD;
-          exsr VREFR;
-       endsl;
-
-       dow '1';
-
-          write PBBOT;
-
-          //  If there are no module ...
-          if (not wrkstn_flags.sflDsp);
-             //  ... display 'not found' message
-             write PBLEER;
-          endif;
-
-          EXFMT PBCTL;
-
-          select;
-          when (workstn.aid = cKeyF3);
-             o_rc = '*CANCEL';
-             LEAVE;
-          when (workstn.aid = cKeyF5);
-             exsr VREFR;
-             iter;
-          when (workstn.aid = cKeyF12);
-             o_rc = '*CANCEL';
-             LEAVE;
-          when (workstn.aid = cKeyEnter);
-             exsr VSFL;
-             if (isFound = cTRUE);
-                LEAVE;
-             else;
-                iter;
-             endif;
-          other;
-             iter;
-          endsl;
-
-       enddo;
-
-       //---------------------------------------------------*
-       //  Close program
-       close DSPSRCD;
-
-       exsr DELLST;
-
-       return;
-
-       //====================================================*
-       //  Refresh screen                                    *
-       //====================================================*
-
-       begsr VREFR;
-
-          exsr CRTLST;
-
-          exsr PBCLR;
-          exsr PBFL;
-
-       endsr;
-
-       //====================================================*
-       //  Read changed subfile records                      *
-       //====================================================*
-
-       begsr VSFL;
-
-          //  "Not found"
-          isFound = cFALSE;
-
-          if (not wrkstn_flags.sflDsp);
-             //  Keine Einträge vorhanden ...
-          else;
-
-             dou %eof(DSPSRCD);
-                READC PBSFL;
-                //  "Is found"
-                if (not %eof(DSPSRCD));
-                   select;
-                   when (SFPAU = '');
-                      wrkstn_flags.sflNxtChg = *off;
-                      wrkstn_flags.sfpau_pc = *off;
-                      UPDATE PBSFL;
-                   when (SFPAU = '1');
-                      SFPAU = '';
-                      wrkstn_flags.sflNxtChg = *off;
-                      wrkstn_flags.sfpau_pc = *off;
-                      UPDATE PBSFL;
-                      exsr FILLEL;
-                      isFound = cTRUE;
-                   other;
-                      wrkstn_flags.sflNxtChg = *on;
-                      wrkstn_flags.sfpau_pc = *on;
-                      UPDATE PBSFL;
-                      LEAVE;
-                   endsl;
-                endif;
-
-             enddo;
-
-          endif;
-
-       endsr;
-
-       //====================================================*
-       //  Set return values from selected module            *
-       //====================================================*
-
-       begsr FILLEL;
-
-          o_qSrcFile = $$SRCF + $$SRCL;
-          o_srcMbr = $$SRCM;
-
-       endsr;
-
-       //====================================================*
-       //  Create module list                                *
-       //====================================================*
-
-       begsr CRTLST;
-
-          yModule = '';
-
-          if (i_objType = '*PGM');
-             DSPSRCR1(i_qObj: '1': yCount: yModule);
-          else;
-             DSPSRCR3(i_qObj: '1': yCount: yModule);
-          endif;
-
-       endsr;
-
-       //====================================================*
-       //  Delete module list                                *
-       //====================================================*
-
-       begsr DELLST;
-
-          if (i_objType = '*PGM');
-             DSPSRCR1(i_qObj: '4': yCount: yModule);
-          else;
-             DSPSRCR3(i_qObj: '4': yCount: yModule);
-          endif;
-
-       endsr;
-
-       //====================================================*
-       //  Read next module entry from list                  *
-       //====================================================*
-
-       begsr REDLST;
-
-          if (i_objType = '*PGM');
-             DSPSRCR1(i_qObj: '5': yCount: yModule);
-             pgml0100 = yModule;
-             module.pgm = pgml0100.pgm;
-             module.pgmLib = pgml0100.pgmLib;
-             module.mod = pgml0100.mod;
-             module.modLib = pgml0100.modLib;
-             module.srcFile = pgml0100.srcFile;
-             module.srcLib = pgml0100.srcLib;
-             module.srcMbr = pgml0100.srcMbr;
-          else;
-             DSPSRCR3(i_qObj: '5': yCount: yModule);
-             spgl0100 = yModule;
-             module.pgm = spgl0100.srvPgm;
-             module.pgmLib = spgl0100.srvPgmLib;
-             module.mod = spgl0100.mod;
-             module.modLib = spgl0100.modLib;
-             module.srcFile = spgl0100.srcFile;
-             module.srcLib = spgl0100.srcLib;
-             module.srcMbr = spgl0100.srcMbr;
-          endif;
-
-       endsr;
-
-       //====================================================*
-       //  Clear subfile                                     *
-       //====================================================*
-
-       begsr PBCLR;
-
-          wrkstn_flags.sflDsp = *off;
-          wrkstn_flags.sflDspCtl = *off;
-          WRITE PBCTL;
-          wrkstn_flags.sflDspCtl = *on;
-
-          wrkstn_flags.sflEnd = *on;
-
-          RECNO = 0;
-          SFSANR = 1;
-
-       endsr;
-
-       //====================================================*
-       //  Fill subfile ith module list                      *
-       //====================================================*
-
-       begsr PBFL;
-
-          dow (yCount > 0);
-
-             RECNO = RECNO + 1;
-             exsr REDLST;
-             exsr FILLSF;
-
-             //  If there is only one module in the list, ...
-             if (yCount = 1 and RECNO = 1);
-                //  ... then select it automatically
-                wrkstn_flags.sflNxtChg = *on;
-                SFPAU = '1';
-             else;
-                //  ... else let the user select the module
-                wrkstn_flags.sflNxtChg = *off;
-                SFPAU = '';
-             endif;
-
-             wrkstn_flags.sfpau_pc = *off;
-
-             WRITE PBSFL;
-             wrkstn_flags.sflDsp = *on;
-          enddo;
-
-       endsr;
-
-       //====================================================*
-       //  Populate subfile fields                           *
-       //====================================================*
-
-       begsr FILLSF;
-
-          SFPAU = '';
-          $$MDNM = module.mod;
-          $$MDLB = module.modLib;
-          $$SRCF = module.srcFile;
-          $$SRCL = module.srcLib;
-          $$SRCM = module.srcMbr;
-
-       endsr;
-
-      /end-free
-     P                 E
+**free
+//=====================================================================*
+//                                                                     *
+//  Kurzdokumentation :                                                *
+//                                                                     *
+//  Bereich . . . : DSPSRC                                             *
+//  Objekt  . . . : DSPSRCR2                                           *
+//  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
+//  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+//  Datum . . . . : 25.07.2001                                         *
+//                                                                     *
+//=====================================================================*
+//                                                                     *
+//  This software is free software, you can redistribute it and/or     *
+//  modify it under the terms of the GNU General Public License (GPL)  *
+//  as published by the Free Software Foundation.                      *
+//                                                                     *
+//  See GNU General Public License for details.                        *
+//          http://www.opensource.org                                  *
+//          http://www.opensource.org/licenses/gpl-license.html        *
+//                                                                     *
+//=====================================================================*
+//  History:                                                           *
+//                                                                     *
+//  Datum       Name          Änderung                                 *
+//  ----------  ------------  ---------------------------------------  *
+//  10.01.2003  Th.Raddatz    Removed special character § from source. *
+//  01.03.2007  Th.Raddatz    Wrong option in module selection subfile *
+//                            was not correctly processed. Added       *
+//                            'DSPATR(PC)' to SFPAU.                   *
+//  08.02.2019  Th.Raddatz    Converted to /free.                      *
+//                                                                     *
+//=====================================================================*
+// >>PRE-COMPILER<<                                                    *
+//   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
+//                           SRCFILE(&SL/&SF) +                        *
+//                           SRCMBR(&SM);                              *
+//   >>IMPORTANT<<                                                     *
+//     >>PARM<< TRUNCNBR(*NO);                                         *
+//     >>PARM<< DBGVIEW(*LIST);                                        *
+//     >>PARM<< OPTION(*EVENTF);                                       *
+//   >>END-IMPORTANT<<                                                 *
+//   >>EXECUTE<<                                                       *
+// >>END-PRE-COMPILER<<                                                *
+//=====================================================================*
+ctl-opt nomain;
+/copy QDSPSRC,H_SPEC
+/copy QDSPSRC,COPYRIGHT
+
+dcl-f DSPSRCD workstn(*ext) usage(*input: *output) usropn infds(workstn) sfile(PBSFL: recno)
+  indds(wrkstn_flags);
+
+/copy qdspsrc,types_h
+/copy qdspsrc,workstn
+/copy qdspsrc,qbnlspgm
+/copy qdspsrc,qbnlpgmi
+
+dcl-ds wrkstn_flags qualified;
+  sflDsp    ind pos(80);
+  sflEnd    ind;
+  sflDspCtl ind;
+  sflNxtChg ind;
+  sfpau_pc  ind;
+end-ds;
+
+
+dcl-s RECNO int(10);
+
+dcl-ds WORKSTN likeds(workstn_infds_t);
+
+dcl-ds spgl0100 likeds(spgl0100_t);
+dcl-ds pgml0100 likeds(pgml0100_t);
+
+dcl-ds module qualified;
+  pgm     char(10);
+  pgmLib  char(10);
+  mod     char(10);
+  modLib  char(10);
+  srcFile char(10);
+  srcLib  char(10);
+  srcMbr  char(10);
+end-ds;
+
+dcl-s isFound ind;
+
+dcl-c cTRUE '1';
+dcl-c cFALSE '0';
+
+dcl-s yCount packed(10);
+dcl-ds yModule len(512);
+end-ds;
+
+//*******************************************************************
+//  Program entry point                                             *
+//*******************************************************************
+dcl-proc DSPSRCR2 export;
+  dcl-pi *n;
+    i_qObj       char(20) const;
+    i_objType    char(10) const;
+    i_autoSelect ind const;
+    o_qSrcFile   likeds(qObj_t);
+    o_srcMbr     char(10);
+    o_rc         char(10);
+  end-pi;
+//---------------------------------------------------*
+
+//  Subfile record number
+RECNO = 0;
+
+//  "Not found"  flag
+isFound = cFALSE;
+
+o_rc = '';
+o_qSrcFile = '';
+o_srcMbr = '';
+
+exsr CRTLST;
+
+select;
+   //  No more entries available
+when (yCount <= 0);
+   return;
+
+   //  Only one module found, select it automatically
+when (yCount = 1 AND i_autoSelect);
+   exsr REDLST;
+   exsr FILLSF;
+   exsr FILLEL;
+   return;
+
+   //  More than one module available, let the user select
+other;
+   OPEN DSPSRCD;
+   exsr VREFR;
+endsl;
+
+dow '1';
+
+   write PBBOT;
+
+   //  If there are no module ...
+   if (not wrkstn_flags.sflDsp);
+      //  ... display 'not found' message
+      write PBLEER;
+   endif;
+
+   EXFMT PBCTL;
+
+   select;
+   when (workstn.aid = cKeyF3);
+      o_rc = '*CANCEL';
+      LEAVE;
+   when (workstn.aid = cKeyF5);
+      exsr VREFR;
+      iter;
+   when (workstn.aid = cKeyF12);
+      o_rc = '*CANCEL';
+      LEAVE;
+   when (workstn.aid = cKeyEnter);
+      exsr VSFL;
+      if (isFound = cTRUE);
+         LEAVE;
+      else;
+         iter;
+      endif;
+   other;
+      iter;
+   endsl;
+
+enddo;
+
+//---------------------------------------------------*
+//  Close program
+close DSPSRCD;
+
+exsr DELLST;
+
+return;
+
+//====================================================*
+//  Refresh screen                                    *
+//====================================================*
+
+begsr VREFR;
+
+   exsr CRTLST;
+
+   exsr PBCLR;
+   exsr PBFL;
+
+endsr;
+
+//====================================================*
+//  Read changed subfile records                      *
+//====================================================*
+
+begsr VSFL;
+
+   //  "Not found"
+   isFound = cFALSE;
+
+   if (not wrkstn_flags.sflDsp);
+      //  Keine Einträge vorhanden ...
+   else;
+
+      dou %eof(DSPSRCD);
+         READC PBSFL;
+         //  "Is found"
+         if (not %eof(DSPSRCD));
+            select;
+            when (SFPAU = '');
+               wrkstn_flags.sflNxtChg = *off;
+               wrkstn_flags.sfpau_pc = *off;
+               UPDATE PBSFL;
+            when (SFPAU = '1');
+               SFPAU = '';
+               wrkstn_flags.sflNxtChg = *off;
+               wrkstn_flags.sfpau_pc = *off;
+               UPDATE PBSFL;
+               exsr FILLEL;
+               isFound = cTRUE;
+            other;
+               wrkstn_flags.sflNxtChg = *on;
+               wrkstn_flags.sfpau_pc = *on;
+               UPDATE PBSFL;
+               LEAVE;
+            endsl;
+         endif;
+
+      enddo;
+
+   endif;
+
+endsr;
+
+//====================================================*
+//  Set return values from selected module            *
+//====================================================*
+
+begsr FILLEL;
+
+   o_qSrcFile = $$SRCF + $$SRCL;
+   o_srcMbr = $$SRCM;
+
+endsr;
+
+//====================================================*
+//  Create module list                                *
+//====================================================*
+
+begsr CRTLST;
+
+   yModule = '';
+
+   if (i_objType = '*PGM');
+      DSPSRCR1(i_qObj: '1': yCount: yModule);
+   else;
+      DSPSRCR3(i_qObj: '1': yCount: yModule);
+   endif;
+
+endsr;
+
+//====================================================*
+//  Delete module list                                *
+//====================================================*
+
+begsr DELLST;
+
+   if (i_objType = '*PGM');
+      DSPSRCR1(i_qObj: '4': yCount: yModule);
+   else;
+      DSPSRCR3(i_qObj: '4': yCount: yModule);
+   endif;
+
+endsr;
+
+//====================================================*
+//  Read next module entry from list                  *
+//====================================================*
+
+begsr REDLST;
+
+   if (i_objType = '*PGM');
+      DSPSRCR1(i_qObj: '5': yCount: yModule);
+      pgml0100 = yModule;
+      module.pgm = pgml0100.pgm;
+      module.pgmLib = pgml0100.pgmLib;
+      module.mod = pgml0100.mod;
+      module.modLib = pgml0100.modLib;
+      module.srcFile = pgml0100.srcFile;
+      module.srcLib = pgml0100.srcLib;
+      module.srcMbr = pgml0100.srcMbr;
+   else;
+      DSPSRCR3(i_qObj: '5': yCount: yModule);
+      spgl0100 = yModule;
+      module.pgm = spgl0100.srvPgm;
+      module.pgmLib = spgl0100.srvPgmLib;
+      module.mod = spgl0100.mod;
+      module.modLib = spgl0100.modLib;
+      module.srcFile = spgl0100.srcFile;
+      module.srcLib = spgl0100.srcLib;
+      module.srcMbr = spgl0100.srcMbr;
+   endif;
+
+endsr;
+
+//====================================================*
+//  Clear subfile                                     *
+//====================================================*
+
+begsr PBCLR;
+
+   wrkstn_flags.sflDsp = *off;
+   wrkstn_flags.sflDspCtl = *off;
+   WRITE PBCTL;
+   wrkstn_flags.sflDspCtl = *on;
+
+   wrkstn_flags.sflEnd = *on;
+
+   RECNO = 0;
+   SFSANR = 1;
+
+endsr;
+
+//====================================================*
+//  Fill subfile ith module list                      *
+//====================================================*
+
+begsr PBFL;
+
+   dow (yCount > 0);
+
+      RECNO = RECNO + 1;
+      exsr REDLST;
+      exsr FILLSF;
+
+      //  If there is only one module in the list, ...
+      if (yCount = 1 and RECNO = 1);
+         //  ... then select it automatically
+         wrkstn_flags.sflNxtChg = *on;
+         SFPAU = '1';
+      else;
+         //  ... else let the user select the module
+         wrkstn_flags.sflNxtChg = *off;
+         SFPAU = '';
+      endif;
+
+      wrkstn_flags.sfpau_pc = *off;
+
+      WRITE PBSFL;
+      wrkstn_flags.sflDsp = *on;
+   enddo;
+
+endsr;
+
+//====================================================*
+//  Populate subfile fields                           *
+//====================================================*
+
+begsr FILLSF;
+
+   SFPAU = '';
+   $$MDNM = module.mod;
+   $$MDLB = module.modLib;
+   $$SRCF = module.srcFile;
+   $$SRCL = module.srcLib;
+   $$SRCM = module.srcMbr;
+
+endsr;
+
+end-proc;
 
 ]]>  </copysrc>
 </mbr>
@@ -3234,229 +3230,226 @@ mbrtext =  "Display Source Code - list service program modules"
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-       //=====================================================================*
-       //                                                                     *
-       //  Kurzdokumentation :                                                *
-       //                                                                     *
-       //  Bereich . . . : DSPSRC                                             *
-       //  Objekt  . . . : DSPSRCR3                                           *
-       //  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
-       //  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
-       //  Datum . . . . : 25.07.2001                                         *
-       //                                                                     *
-       //=====================================================================*
-       //                                                                     *
-       //  This software is free software, you can redistribute it and/or     *
-       //  modify it under the terms of the GNU General Public License (GPL)  *
-       //  as published by the Free Software Foundation.                      *
-       //                                                                     *
-       //  See GNU General Public License for details.                        *
-       //          http://www.opensource.org                                  *
-       //          http://www.opensource.org/licenses/gpl-license.html        *
-       //                                                                     *
-       //=====================================================================*
-       //  History:                                                           *
-       //                                                                     *
-       //  Datum       Name          Änderung                                 *
-       //  ----------  ------------  ---------------------------------------  *
-       //  08.02.2019  Th.Raddatz    Converted to /free.                      *
-       //                                                                     *
-       //=====================================================================*
-       // >>PRE-COMPILER<<                                                    *
-       //   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
-       //                           SRCFILE(&SL/&SF) +                        *
-       //                           SRCMBR(&SM);                              *
-       //   >>IMPORTANT<<                                                     *
-       //     >>PARM<< TRUNCNBR(*NO);                                         *
-       //     >>PARM<< DBGVIEW(*LIST);                                        *
-       //     >>PARM<< OPTION(*EVENTF);                                       *
-       //   >>END-IMPORTANT<<                                                 *
-       //   >>EXECUTE<<                                                       *
-       // >>END-PRE-COMPILER<<                                                *
-       //=====================================================================*
-       //                                                                     *
-       //  INPUT-Parameter:                                                   *
-       //  ================                                                   *
-       //                                                                     *
-       //  i_qSrvPgm Qualifizierte Programmname                               *
-       //             1 - 10:  pgm                                            *
-       //            11 - 20:  library                                        *
-       //                        *ALL        Alle Bibliotheken auf dem System *
-       //                        *ALLUSR     Alle nicht-IBM Bibliotheken      *
-       //                        *CURLIB     Aktuelle Bibliothek des Jobs     *
-       //                        *LIBL       kompl. Bibliotheksliste          *
-       //                        *USRLIBL    Benutzerteil der Bibl.Liste      *
-       //                                                                     *
-       //  i_option  Funktionscode                                            *
-       //              1 - erstellen Liste                   CREATE           *
-       //              5 - lesen nächsten Eintrag            READ             *
-       //              4 - löschen Liste                     DELETE           *
-       //                                                                     *
-       //  OUTPUT-Parameter:                                                  *
-       //  =================                                                  *
-       //                                                                     *
-       //  o_count   Anzahl noch verfügbarer Einträge                         *
-       //  o_module  Eintragsdaten                                            *
-       //                                                                     *
-       //=====================================================================*
-     H NOMAIN
-      /COPY QDSPSRC,H_SPEC
-      /COPY QDSPSRC,COPYRIGHT
+**free
+//=====================================================================*
+//                                                                     *
+//  Kurzdokumentation :                                                *
+//                                                                     *
+//  Bereich . . . : DSPSRC                                             *
+//  Objekt  . . . : DSPSRCR3                                           *
+//  Beschreibung  : Tool: DSPSRC     (Display Source Code)             *
+//  Author  . . . : Thomas Raddatz   <thomas.raddatz@tools400.de>      *
+//  Datum . . . . : 25.07.2001                                         *
+//                                                                     *
+//=====================================================================*
+//                                                                     *
+//  This software is free software, you can redistribute it and/or     *
+//  modify it under the terms of the GNU General Public License (GPL)  *
+//  as published by the Free Software Foundation.                      *
+//                                                                     *
+//  See GNU General Public License for details.                        *
+//          http://www.opensource.org                                  *
+//          http://www.opensource.org/licenses/gpl-license.html        *
+//                                                                     *
+//=====================================================================*
+//  History:                                                           *
+//                                                                     *
+//  Datum       Name          Änderung                                 *
+//  ----------  ------------  ---------------------------------------  *
+//  08.02.2019  Th.Raddatz    Converted to /free.                      *
+//                                                                     *
+//=====================================================================*
+// >>PRE-COMPILER<<                                                    *
+//   >>CRTCMD<< CRTRPGMOD    MODULE(&LI/&OB) +                         *
+//                           SRCFILE(&SL/&SF) +                        *
+//                           SRCMBR(&SM);                              *
+//   >>IMPORTANT<<                                                     *
+//     >>PARM<< TRUNCNBR(*NO);                                         *
+//     >>PARM<< DBGVIEW(*LIST);                                        *
+//     >>PARM<< OPTION(*EVENTF);                                       *
+//   >>END-IMPORTANT<<                                                 *
+//   >>EXECUTE<<                                                       *
+// >>END-PRE-COMPILER<<                                                *
+//=====================================================================*
+//                                                                     *
+//  INPUT-Parameter:                                                   *
+//  ================                                                   *
+//                                                                     *
+//  i_qSrvPgm Qualifizierte Programmname                               *
+//             1 - 10:  pgm                                            *
+//            11 - 20:  library                                        *
+//                        *ALL        Alle Bibliotheken auf dem System *
+//                        *ALLUSR     Alle nicht-IBM Bibliotheken      *
+//                        *CURLIB     Aktuelle Bibliothek des Jobs     *
+//                        *LIBL       kompl. Bibliotheksliste          *
+//                        *USRLIBL    Benutzerteil der Bibl.Liste      *
+//                                                                     *
+//  i_option  Funktionscode                                            *
+//              1 - erstellen Liste                   CREATE           *
+//              5 - lesen nächsten Eintrag            READ             *
+//              4 - löschen Liste                     DELETE           *
+//                                                                     *
+//  OUTPUT-Parameter:                                                  *
+//  =================                                                  *
+//                                                                     *
+//  o_count   Anzahl noch verfügbarer Einträge                         *
+//  o_module  Eintragsdaten                                            *
+//                                                                     *
+//=====================================================================*
+ctl-opt nomain;
+/copy QDSPSRC,H_SPEC
+/copy QDSPSRC,COPYRIGHT
 
-     D lstHdr          DS                  likeds(genLstHdr_t) based(pLstHdr)
-     D spgl0100        DS                  likeds(SPGL0100_t) based(pSpgl0100)
-     D errCode         DS                  likeds(errCode_t)
+dcl-ds lstHdr likeds(genLstHdr_t) based(pLstHdr);
+dcl-ds spgl0100 likeds(SPGL0100_t) based(pSpgl0100);
+dcl-ds errCode likeds(errCode_t);
 
-      /copy qdspsrc,types_h
-      /copy qdspsrc,qusrspc
-      /copy qdspsrc,genlsthdr
-      /copy qdspsrc,fderrcode
-      /copy qdspsrc,qbnlspgm
-      /copy qdspsrc,qcmdexc
+/copy qdspsrc,types_h
+/copy qdspsrc,qusrspc
+/copy qdspsrc,genlsthdr
+/copy qdspsrc,fderrcode
+/copy qdspsrc,qbnlspgm
+/copy qdspsrc,qcmdexc
 
-     D qUsrSpc         DS                  likeds(qObj_t)
-     D numRecords      S             10I 0
-     D clCmd           S            512A   varying
+dcl-ds qUsrSpc likeds(qObj_t);
+dcl-s numRecords int(10);
+dcl-s clCmd varchar(512);
 
-     D existUserSpace...
-     D                 PR              n   extproc('existUserSpace')
-     D  i_qUsrSpc                          const likeds(qObj_t)
+dcl-pr existUserSpace ind extproc('existUserSpace');
+  i_qUsrSpc likeds(qObj_t) const;
+end-pr;
 
-       //*******************************************************************
-       //  Program entry point                                             *
-       //*******************************************************************
-     P DSPSRCR3...
-     P                 B                   export
-     D                 PI
-     D  i_qSrvPgm                          const likeds(qObj_t)
-     D  i_option                      1A   const
-     D  o_count                      10P 0
-     D  o_module                    512A
-       //---------------------------------------------------*
-      /free
+//*******************************************************************
+//  Program entry point                                             *
+//*******************************************************************
+dcl-proc DSPSRCR3 export;
+  dcl-pi *n;
+    i_qSrvPgm likeds(qObj_t) const;
+    i_option  char(1) const;
+    o_count   packed(10);
+    o_module  char(512);
+  end-pi;
+  //---------------------------------------------------*
 
-       qUsrSpc.name = 'DSPSRC';
-       qUsrSpc.lib = 'QTEMP';
+  qUsrSpc.name = 'DSPSRC';
+  qUsrSpc.lib = 'QTEMP';
 
-       select;
-          //  Create module list
-       when (i_option = '1');
-          exsr CREATE;
-          //  Delete list
-       when (i_option = '4');
-          exsr DELETE;
-          //  Get next entry
-       when (i_option = '5');
-          exsr READ;
-       endsl;
+  select;
+  //  Create module list
+  when (i_option = '1');
+    exsr CREATE;
+  //  Delete list
+  when (i_option = '4');
+    exsr DELETE;
+  //  Get next entry
+  when (i_option = '5');
+    exsr READ;
+  endsl;
 
-       //====================================================*
-       //  CREATE --  Erstellen USRSPC und Liste             *
-       //----------------------------------------------------*
-       //  Erforderliche Änderungen für anderes List API     *
-       //    - evtl. Initialgröße des USRSPC                 *
-       //    - API Aufruf für Liste                          *
-       //====================================================*
-       begsr CREATE;
+  //====================================================*
+  //  CREATE --  Erstellen USRSPC und Liste             *
+  //----------------------------------------------------*
+  //  Erforderliche Änderungen für anderes List API     *
+  //    - evtl. Initialgröße des USRSPC                 *
+  //    - API Aufruf für Liste                          *
+  //====================================================*
+  begsr CREATE;
 
-          if (not existUserSpace(qUsrSpc));
-             QUSCRTUS(
-                qUsrSpc: 'TEMP': 2048: '': '*ALL': '');
-          endif;
+    if (not existUserSpace(qUsrSpc));
+      QUSCRTUS(
+         qUsrSpc: 'TEMP': 2048: '': '*ALL': '');
+    endif;
 
-          clear errCode;
-          errCode.bytPrv = %size(errCode);
+    clear errCode;
+    errCode.bytPrv = %size(errCode);
 
-          QBNLSPGM(
-            qUsrSpc: 'SPGL0100': i_qSrvPgm: errCode);
+    QBNLSPGM(
+      qUsrSpc: 'SPGL0100': i_qSrvPgm: errCode);
 
-          if (errCode.bytAvl > 0);
-             //  Fehler aufgetreten!
-             numRecords = 0;
-          else;
-             //  ermitteln Offset zu den Eintragsdaten
-             QUSPTRUS(qUsrSpc: pLstHdr);
+    if (errCode.bytAvl > 0);
+      //  Fehler aufgetreten!
+      numRecords = 0;
+    else;
+      //  ermitteln Offset zu den Eintragsdaten
+      QUSPTRUS(qUsrSpc: pLstHdr);
 
-             numRecords = lstHdr.numE;
-          endif;
+      numRecords = lstHdr.numE;
+    endif;
 
-          o_count = numRecords;
-          o_module = '';
+    o_count = numRecords;
+    o_module = '';
 
-       endsr;
+  endsr;
 
-       //====================================================*
-       //  DELETE --  Löschen USRSPC                         *
-       //----------------------------------------------------*
-       //  Erforderliche Änderungen für anderes List API     *
-       //    - *NONE                                         *
-       //====================================================*
-       begsr DELETE;
+  //====================================================*
+  //  DELETE --  Löschen USRSPC                         *
+  //----------------------------------------------------*
+  //  Erforderliche Änderungen für anderes List API     *
+  //    - *NONE                                         *
+  //====================================================*
+  begsr DELETE;
 
-          if (existUserSpace(qUsrSpc));
-             clCmd = 'DLTUSRSPC +
-                     USRSPC(' + %trim(qUsrSpc.lib) + '/'
-                              + %trim(qUsrSpc.name) + ')';
-             callp(e) QCMDEXC(clCmd: %len(clCmd));
-          endif;
+    if (existUserSpace(qUsrSpc));
+      clCmd = 'DLTUSRSPC +
+              USRSPC(' + %trim(qUsrSpc.lib) + '/'
+                       + %trim(qUsrSpc.name) + ')';
+      callp(e) QCMDEXC(clCmd: %len(clCmd));
+    endif;
 
-          o_count = 0;
-          o_module = '';
+    o_count = 0;
+    o_module = '';
 
-       endsr;
+  endsr;
 
-       //====================================================*
-       //  READ   --  Lesen nächsten Eintrag                 *
-       //----------------------------------------------------*
-       //  Erforderliche Änderungen für anderes List API     *
-       //    - *NONE                                         *
-       //====================================================*
-       begsr READ;
+  //====================================================*
+  //  READ   --  Lesen nächsten Eintrag                 *
+  //----------------------------------------------------*
+  //  Erforderliche Änderungen für anderes List API     *
+  //    - *NONE                                         *
+  //====================================================*
+  begsr READ;
 
-          o_count = -1;
-          o_module  = '';
+    o_count = -1;
+    o_module  = '';
 
-          if (numRecords > 0);
+    if (numRecords > 0);
 
-             pSpgl0100 = pLstHdr + lstHdr.ofsLstSct +
-               ((lstHdr.numE - numRecords) *
-               lstHdr.sizeE);
-             numRecords = numRecords - 1;
+      pSpgl0100 = pLstHdr + lstHdr.ofsLstSct +
+        ((lstHdr.numE - numRecords) *
+        lstHdr.sizeE);
+      numRecords = numRecords - 1;
 
-             o_count = numRecords;
-             o_module = spgl0100;
+      o_count = numRecords;
+      o_module = spgl0100;
 
-          endif;
+    endif;
 
-       endsr;
+  endsr;
 
-      /end-free
-     P                 E
+end-proc;
 
-       //====================================================*
-       //  Check user space existance                        *
-       //====================================================*
-     P existUserSpace...
-     P                 B
-     D                 PI              n
-     D  i_qUsrSpc                          const likeds(qObj_t)
-      /free
+//====================================================*
+//  Check user space existance                        *
+//====================================================*
+dcl-proc existUserSpace;
+  dcl-pi *n ind;
+    i_qUsrSpc likeds(qObj_t) const;
+  end-pi;
 
-       clCmd = 'CHKOBJ OBJ(' + %trim(qUsrSpc.lib) + '/'
-                             + %trim(qUsrSpc.name) + ') OBJTYPE(*USRSPC)';
+  clCmd = 'CHKOBJ OBJ(' + %trim(qUsrSpc.lib) + '/'
+                        + %trim(qUsrSpc.name) + ') OBJTYPE(*USRSPC)';
 
-       monitor;
-          QCMDEXC(clCmd: %len(clCmd));
-       on-error;
-          return *off;
-       endmon;
+  monitor;
+    QCMDEXC(clCmd: %len(clCmd));
+  on-error;
+    return *off;
+  endmon;
 
-       return *on;
+  return *on;
 
-      /end-free
-     P                 E
+end-proc;
 
 ]]>  </copysrc>
 </mbr>
@@ -3471,21 +3464,23 @@ mbrtext =  "cpybk   : API error code                          "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      /if not defined(errCode_t )
-      /define errCode_t
-      *===============================================================*
-      *  API error code                                               *
-      *===============================================================*
-     d errCode_t       ds                  qualified           based(pDummy)
-     d  bytPrv                       10i 0
-     d  bytAvl                       10i 0
-     d  excID                         7a
-     d  reserved_1                    1a
-     d  excDta                      256a
-      *
-      /endif
+**free
+/if not defined(errCode_t)
+/define errCode_t
+//===============================================================*
+//  API error code                                               *
+//===============================================================*
+dcl-ds errCode_t qualified template;
+  bytPrv     int(10);
+  bytAvl     int(10);
+  excID      char(7);
+  reserved_1 char(1);
+  excDta     char(256);
+end-ds;
+
+/endif
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -3499,19 +3494,21 @@ mbrtext =  "cpybk   : Qualified object name                   "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      /if not defined(qObj_t    )
-      /define qObj_t
-      * ============================================================= *
-      *   Qualified object name                                       *
-      *===============================================================*
-      *
-     d qObj_t          ds                  qualified           based(pDummy)
-     d  name                         10a
-     d  lib                          10a
-      *
-      /endif
+**free
+/if not defined(qObj_t)
+/define qObj_t
+// ============================================================= *
+//   Qualified object name                                       *
+//===============================================================*
+
+dcl-ds qObj_t qualified template;
+  name char(10);
+  lib  char(10);
+end-ds;
+
+/endif
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -3525,42 +3522,43 @@ mbrtext =  "Generic List Header for List APIs                 "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      /if not defined(genLstHdr_t)
-      /define genLstHdr_t
-      * ============================================================= *
-      *   Generic List Header for List APIs                           *
-      *===============================================================*
-      *
-     d genLstHdr_t...
-     d                 ds                  qualified               based(pDummy)
-     d  userArea               1     64A
-     d  size                  65     68I 0
-     d  release               69     72A
-     d  format                73     80A
-     d  API                   81     90A
-     d  crtDate               91    103A
-     d  infStat              104    104A
-     d  sizeUsrSpc           105    108I 0
-     d  ofsInpSct            109    112I 0
-     d  sizeInpSct           113    116I 0
-     d  ofsHdrSct            117    120I 0
-     d  sizeHdrSct           121    124I 0
-     d  ofsLstSct            125    128I 0
-     d  sizeLstSct           129    132I 0
-     d  numE                 133    136I 0
-     d  sizeE                137    140I 0
-     d  CCSID                141    144I 0
-     d  cntryID              145    146A
-     d  lngID                147    149A
-     d  subLstInd            150    150A
-     d  reserved_01          151    192A
-      *  Additional Format 0300 Fields
-     d  APIEntryPoint        193    448A
-     d  reserved_02          449    576A
-      *
-      /endif
+**free
+/if not defined(genLstHdr_t)
+/define genLstHdr_t
+// ============================================================= *
+//   Generic List Header for List APIs                           *
+//===============================================================*
+
+dcl-ds genLstHdr_t qualified template;
+  userArea      char(64);
+  size          int(10);
+  release       char(4);
+  format        char(8);
+  API           char(10);
+  crtDate       char(13);
+  infStat       char(1);
+  sizeUsrSpc    int(10);
+  ofsInpSct     int(10);
+  sizeInpSct    int(10);
+  ofsHdrSct     int(10);
+  sizeHdrSct    int(10);
+  ofsLstSct     int(10);
+  sizeLstSct    int(10);
+  numE          int(10);
+  sizeE         int(10);
+  CCSID         int(10);
+  cntryID       char(2);
+  lngID         char(3);
+  subLstInd     char(1);
+  reserved_01   char(42);
+  //  Additional Format 0300 Fields
+  APIEntryPoint char(256);
+  reserved_02   char(128);
+end-ds;
+
+/endif
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -3574,9 +3572,10 @@ mbrtext =  "H-Specifications                                  "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-     H DEBUG DECEDIT('0,') DATEDIT(*DMY.)
+**free
+ctl-opt debug decedit('0,') datedit(*DMY.);
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -3590,48 +3589,51 @@ mbrtext =  "List ILE Program Information (QBNLPGMI) API       "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
+**free
 
-       // List ILE program information (QBNLPGMI) API.
-     d QBNLPGMI        pr                  ExtPgm('QBNLPGMI')
-     d   usrSpc                      20a   Const
-     d   fmt                          8a   Const
-     d   pgm                         20a   Const
-     d   errors                   32766a   Options(*VarSize) NoOpt
+// List ILE program information (QBNLPGMI) API.
+dcl-pr QBNLPGMI extpgm('QBNLPGMI');
+  usrSpc char(20) const;
+  fmt    char(8) const;
+  pgm    char(20) const;
+  errors char(32766) options(*varsize) noopt;
+end-pr;
 
-       // Structure of an entry in a QBNLPGMI list.
-     d PGML0100_t      ds                  Qualified Based(template)
-     d  pgm                          10a
-     d  pgmLib                       10a
-     d  mod                          10a
-     d  modLib                       10a
-     d  srcFile                      10a
-     d  srcLib                       10a
-     d  srcMbr                       10a
-     d  modAttr                      10a
-     d  modCrtDatTim                 13a
-     d  srcUpdDatTim                 13a
-     d  srtSeqTbl                    10a
-     d  srtSeqTblLib                 10a
-     d  langId                       10a
-     d  optLvl                       10i 0
-     d  maxOptLvl                    10i 0
-     d  dbgDta                       10a
-     d  rlsCrtOn                      6a
-     d  rlsCrtFor                     6a
-     d  reserved_1                   20a
-     d  usrModInd                     1a
-     d  licPgm                       13a
-     d  ptfNbr                        5a
-     d  aparId                        6a
-     d  crtDta                        1a
-     d  modCcsid                     10i 0
-     d  objCtlLvl                     8a
-     d  enablePrfCol                  1a
-     d  profilingDta                 10a
-     d  reserved_2                    1a
-      *   ...
+// Structure of an entry in a QBNLPGMI list.
+dcl-ds PGML0100_t qualified based(template);
+  pgm          char(10);
+  pgmLib       char(10);
+  mod          char(10);
+  modLib       char(10);
+  srcFile      char(10);
+  srcLib       char(10);
+  srcMbr       char(10);
+  modAttr      char(10);
+  modCrtDatTim char(13);
+  srcUpdDatTim char(13);
+  srtSeqTbl    char(10);
+  srtSeqTblLib char(10);
+  langId       char(10);
+  optLvl       int(10);
+  maxOptLvl    int(10);
+  dbgDta       char(10);
+  rlsCrtOn     char(6);
+  rlsCrtFor    char(6);
+  reserved_1   char(20);
+  usrModInd    char(1);
+  licPgm       char(13);
+  ptfNbr       char(5);
+  aparId       char(6);
+  crtDta       char(1);
+  modCcsid     int(10);
+  objCtlLvl    char(8);
+  enablePrfCol char(1);
+  profilingDta char(10);
+  reserved_2   char(1);
+//   ...
+end-ds;
 
 ]]>  </copysrc>
 </mbr>
@@ -3646,70 +3648,75 @@ mbrtext =  "List Service Program Information (QBNLSPGM) API   "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
+**free
 
-       // List ILE service program information API
-     d QBNLSPGM        pr                  ExtPgm('QBNLSPGM')
-     d   usrSpc                      20a   Const
-     d   fmt                          8a   Const
-     d   srvPgm                      20a   Const
-     d   errors                   32766a   Options(*VarSize) NoOpt
+// List ILE service program information API
+dcl-pr QBNLSPGM extpgm('QBNLSPGM');
+  usrSpc char(20) const;
+  fmt    char(8) const;
+  srvPgm char(20) const;
+  errors char(32766) options(*varsize) noopt;
+end-pr;
 
-       // Structure of an entry in a QBNLSPGM list.
-     d SPGL0100_t      ds                  Qualified Based(template)
-     d  srvPgm                       10a
-     d  srvPgmLib                    10a
-     d  mod                          10a
-     d  modLib                       10a
-     d  srcFile                      10a
-     d  srcLib                       10a
-     d  srcMbr                       10a
-     d  modAttr                      10a
-     d  modCrtDatTim                 13a
-     d  srcUpdDatTim                 13a
-     d  srtSeqTbl                    10a
-     d  srtSeqTblLib                 10a
-     d  langId                       10a
-     d  optLvl                       10i 0
-     d  maxOptLvl                    10i 0
-     d  dbgDta                       10a
-     d  rlsCrtOn                      6a
-     d  rlsCrtFor                     6a
-     d  reserved_1                   20a
-     d  usrModInd                     1a
-     d  licPgm                       13a
-     d  ptfNbr                        5a
-     d  aparId                        6a
-     d  crtDta                        1a
-     d  modCcsid                     10i 0
-     d  objCtlLvl                     8a
-     d  enablePrfCol                  1a
-     d  profilingDta                 10a
-     d  reserved_2                    1a
-      *   ...
+// Structure of an entry in a QBNLSPGM list.
+dcl-ds SPGL0100_t qualified based(template);
+  srvPgm       char(10);
+  srvPgmLib    char(10);
+  mod          char(10);
+  modLib       char(10);
+  srcFile      char(10);
+  srcLib       char(10);
+  srcMbr       char(10);
+  modAttr      char(10);
+  modCrtDatTim char(13);
+  srcUpdDatTim char(13);
+  srtSeqTbl    char(10);
+  srtSeqTblLib char(10);
+  langId       char(10);
+  optLvl       int(10);
+  maxOptLvl    int(10);
+  dbgDta       char(10);
+  rlsCrtOn     char(6);
+  rlsCrtFor    char(6);
+  reserved_1   char(20);
+  usrModInd    char(1);
+  licPgm       char(13);
+  ptfNbr       char(5);
+  aparId       char(6);
+  crtDta       char(1);
+  modCcsid     int(10);
+  objCtlLvl    char(8);
+  enablePrfCol char(1);
+  profilingDta char(10);
+  reserved_2   char(1);
+//   ...
+end-ds;
 
-       // Structure of an entry in a QBNLSPGM list.
-     d SPGL0600_t      ds                  Qualified Based(template)
-     d  srvPgmName                   10a
-     d  srvPgmLib                    10a
-     d  ccsid                        10i 0
-     d  procNmSize                   10i 0
-     d  procNm                      256a
-     d  usesArgOpt                   10a
+// Structure of an entry in a QBNLSPGM list.
+dcl-ds SPGL0600_t qualified based(template);
+  srvPgmName char(10);
+  srvPgmLib  char(10);
+  ccsid      int(10);
+  procNmSize int(10);
+  procNm     char(256);
+  usesArgOpt char(10);
+end-ds;
 
-       // Structure of an entry in a QBNLSPGM list.
-     d SPGL0610_t      ds                  Qualified Based(template)
-        // Size of this entry. Each entry has a different size.
-     d  size                         10i 0
-     d  srvPgmName                   10a
-     d  srvPgmLib                    10a
-     d  ccsid                        10i 0
-     d  procNmOff                    10i 0
-     d  procNmSize                   10i 0
-     d  usesArgOpt                   10a
-      *   char(*)   -   Reserved
-      *   char(*)   -   Long procedure export name
+// Structure of an entry in a QBNLSPGM list.
+dcl-ds SPGL0610_t qualified based(template);
+  // Size of this entry. Each entry has a different size.
+  size       int(10);
+  srvPgmName char(10);
+  srvPgmLib  char(10);
+  ccsid      int(10);
+  procNmOff  int(10);
+  procNmSize int(10);
+  usesArgOpt char(10);
+//   char(*)   -   Reserved
+//   char(*)   -   Long procedure export name
+end-ds;
 
 ]]>  </copysrc>
 </mbr>
@@ -3724,18 +3731,19 @@ mbrtext =  "Execute Command (QCMDEXC) API                     "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      *
-      *  ... Execute Command (QCMDEXC) API
-     d QCMDEXC...
-     d                 pr                  extpgm('QCMDEXC')
-     d  i_cmd                     32702A   const  options(*varsize)
-     d  i_length                     15P 5 const
-     d  i_IGCprcCtrl                  3a   const  options(*nopass)
-      *
-     d QCMDEXC_IGC     c                   'IGC'
-      *
+**free
+
+//  ... Execute Command (QCMDEXC) API
+dcl-pr QCMDEXC extpgm('QCMDEXC');
+  i_cmd        char(32702) options(*varsize) const;
+  i_length     packed(15: 5) const;
+  i_IGCprcCtrl char(3) options(*nopass) const;
+end-pr;
+
+dcl-c QCMDEXC_IGC 'IGC';
+
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -3749,118 +3757,116 @@ mbrtext =  "User Space APIs                                   "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      /if not defined(QUSRSPC)
-      /define QUSRSPC
-      *
-      *  Create User Space (QUSCRTUS) API
-     d QUSCRTUS...
-     d                 pr                  extpgm('QUSCRTUS')
-     d  i_qUsrSpc                    20A   const
-     d  i_extAttr                    10a   const
-     d  i_initSize                   10i 0 const
-     d  i_initValue                   1a   const
-     d  i_pubAuth                    10a   const
-     d  i_text                       50A   const
-     d  i_replace                    10a   const options(*nopass)               | optGrp 1
-     d  io_ErrCode                65535a         options(*nopass: *varsize)     |
-     d  i_domain                     10a   const options(*nopass)               | optGrp 2
-     d  i_tfrSizeReq                 10i 0 const options(*nopass)               | optGrp 3
-     d  i_optSpcAlgn                  1a   const options(*nopass)               | optGrp 3
-      *
-      *  Change User Space (QUSCHGUS) API
-     d QUSCHGUS...
-     d                 pr                  extpgm('QUSCHGUS')
-     d  i_qUsrSpc                    20A   const
-     d  i_start                      10i 0 const
-     d  i_length                     10i 0 const
-     d  i_data                    65535a   const options(*varsize)
-     d  i_force                       1a   const
-     d  io_ErrCode                65535a         options(*nopass: *varsize)     | optGrp 1
-      *
-      *  Retrieve User Space (QUSRTVUS) API
-     d QUSRTVUS...
-     d                 pr                  extpgm('QUSRTVUS')
-     d  i_qUsrSpc                    20A   const
-     d  i_start                      10i 0 const
-     d  i_length                     10i 0 const
-     d  o_rcvVar                  65535a   const options(*varsize)
-     d  io_ErrCode                65535a         options(*nopass: *varsize)     | optGrp 1
-      *
-      *  Retrieve Pointer to User Space (QUSPTRUS) API
-     d QUSPTRUS...
-     d                 pr                  extpgm('QUSPTRUS')
-     d  i_qUsrSpc                    20A   const
-     d  o_pUsrSpc                      *
-     d  io_ErrCode                65535a         options(*nopass: *varsize)     | optGrp 1
-      *
-      *  Change User Space Attributes (QUSCUSAT) API
-     d QUSCUSAT...
-     d                 pr                  extpgm('QUSCUSAT')
-     d  o_rtnLib                     10a
-     d  i_qUsrSpc                    20A   const
-     d  i_attrs                   65535a   const options(*varsize)
-     d  io_ErrCode                65535a         options(*varsize)
-      *
-     d QUSRSPC_ATTR_SIZE...
-     d                 c                   1                                    BINARY(4)
-     d QUSRSPC_ATTR_INITIAL_VALUE...
-     d                 c                   2                                    CHAR(1)
-     d QUSRSPC_ATTR_AUTO_EXTEND...
-     d                 c                   3                                    CHAR(1)
-     d QUSRSPC_ATTR_TRANSFER_SIZE_REQ...
-     d                 c                   4                                    BINARY(4)
-      *
-     d QUSRSPC_attr_size_t...
-     d                 ds                  qualified               based(pDummy)
-     d  key                          10i 0
-     d  dataLen                      10i 0
-     d  size                         10i 0
-      *
-     d QUSRSPC_initial_value_t...
-     d                 ds                  qualified               based(pDummy)
-     d  key                          10i 0
-     d  dataLen                      10i 0
-     d  value                         1a
-      *
-     d QUSRSPC_auto_extend_t...
-     d                 ds                  qualified               based(pDummy)
-     d  key                          10i 0
-     d  dataLen                      10i 0
-     d  autoExtend                    1a
-      *
-     d QUSRSPC_ztansfer_size_req_t...
-     d                 ds                  qualified               based(pDummy)
-     d  key                          10i 0
-     d  dataLen                      10i 0
-     d  tfrSizeReq                   10i 0
-      *
-      *  Retrieve User Space Attributes (QUSRUSAT) API
-     d QUSRUSAT...
-     d                 pr                  extpgm('QUSRUSAT')
-     d  o_rcvVar                  65535a         options(*varsize)
-     d  i_lenRcvVar                  10i 0 const
-     d  i_format                      8a   const
-     d  i_qUsrSpc                    20A   const
-     d  io_ErrCode                65535a         options(*varsize)
-      *
-      *  SPCA0100 Format
-     d SPCA0100_t      ds                  qualified               based(pDummy)
-     d  bytRet                 1      4I 0
-     d  bytAvl                 5      8I 0
-     d  size                   9     12I 0
-     d  autoExtend            13     13A
-     d  initValue             14     14A
-     d  usrSpcLib             15     24A
-      *
-      *  Delete User Space (QUSDLTUS) API
-     d QUSDLTUS...
-     d                 pr                  extpgm('QUSDLTUS')
-     d  i_qUsrSpc                    20A   const
-     d  io_ErrCode                65535a         options(*varsize)
-      *
-      /endif
+**free
+/if not defined(QUSRSPC)
+/define QUSRSPC
+
+//  Create User Space (QUSCRTUS) API
+dcl-pr QUSCRTUS extpgm('QUSCRTUS');
+  i_qUsrSpc    char(20) const;
+  i_extAttr    char(10) const;
+  i_initSize   int(10) const;
+  i_initValue  char(1) const;
+  i_pubAuth    char(10) const;
+  i_text       char(50) const;
+  i_replace    char(10) options(*nopass) const; // optGrp 1
+  io_ErrCode   char(65535) options(*nopass: *varsize);
+  i_domain     char(10) options(*nopass) const; // optGrp 2
+  i_tfrSizeReq int(10) options(*nopass) const; // optGrp 3
+  i_optSpcAlgn char(1) options(*nopass) const; // optGrp 3
+end-pr;
+
+//  Change User Space (QUSCHGUS) API
+dcl-pr QUSCHGUS extpgm('QUSCHGUS');
+  i_qUsrSpc  char(20) const;
+  i_start    int(10) const;
+  i_length   int(10) const;
+  i_data     char(65535) options(*varsize) const;
+  i_force    char(1) const;
+  io_ErrCode char(65535) options(*nopass: *varsize); // optGrp 1
+end-pr;
+
+//  Retrieve User Space (QUSRTVUS) API
+dcl-pr QUSRTVUS extpgm('QUSRTVUS');
+  i_qUsrSpc  char(20) const;
+  i_start    int(10) const;
+  i_length   int(10) const;
+  o_rcvVar   char(65535) options(*varsize) const;
+  io_ErrCode char(65535) options(*nopass: *varsize); // optGrp 1
+end-pr;
+
+//  Retrieve Pointer to User Space (QUSPTRUS) API
+dcl-pr QUSPTRUS extpgm('QUSPTRUS');
+  i_qUsrSpc  char(20) const;
+  o_pUsrSpc  pointer;
+  io_ErrCode char(65535) options(*nopass: *varsize); // optGrp 1
+end-pr;
+
+//  Change User Space Attributes (QUSCUSAT) API
+dcl-pr QUSCUSAT extpgm('QUSCUSAT');
+  o_rtnLib   char(10);
+  i_qUsrSpc  char(20) const;
+  i_attrs    char(65535) options(*varsize) const;
+  io_ErrCode char(65535) options(*varsize);
+end-pr;
+
+dcl-c QUSRSPC_ATTR_SIZE 1; // BINARY(4)
+dcl-c QUSRSPC_ATTR_INITIAL_VALUE 2; // CHAR(1)
+dcl-c QUSRSPC_ATTR_AUTO_EXTEND 3; // CHAR(1)
+dcl-c QUSRSPC_ATTR_TRANSFER_SIZE_REQ 4; // BINARY(4)
+
+dcl-ds QUSRSPC_attr_size_t qualified template;
+  key     int(10);
+  dataLen int(10);
+  size    int(10);
+end-ds;
+
+dcl-ds QUSRSPC_initial_value_t qualified template;
+  key     int(10);
+  dataLen int(10);
+  value   char(1);
+end-ds;
+
+dcl-ds QUSRSPC_auto_extend_t qualified template;
+  key        int(10);
+  dataLen    int(10);
+  autoExtend char(1);
+end-ds;
+
+dcl-ds QUSRSPC_ztansfer_size_req_t qualified template;
+  key        int(10);
+  dataLen    int(10);
+  tfrSizeReq int(10);
+end-ds;
+
+//  Retrieve User Space Attributes (QUSRUSAT) API
+dcl-pr QUSRUSAT extpgm('QUSRUSAT');
+  o_rcvVar    char(65535) options(*varsize);
+  i_lenRcvVar int(10) const;
+  i_format    char(8) const;
+  i_qUsrSpc   char(20) const;
+  io_ErrCode  char(65535) options(*varsize);
+end-pr;
+
+//  SPCA0100 Format
+dcl-ds SPCA0100_t qualified template;
+  bytRet     int(10) pos(1);
+  bytAvl     int(10) pos(5);
+  size       int(10) pos(9);
+  autoExtend char(1) pos(13);
+  initValue  char(1) pos(14);
+  usrSpcLib  char(10) pos(15);
+end-ds;
+
+//  Delete User Space (QUSDLTUS) API
+dcl-pr QUSDLTUS extpgm('QUSDLTUS');
+  i_qUsrSpc  char(20) const;
+  io_ErrCode char(65535) options(*varsize);
+end-pr;
+
+/endif
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -3874,37 +3880,38 @@ mbrtext =  "Common types and prototypes                       "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      /if not defined(TYPES_H)
-      /define TYPES_H
-      *
-     D DSPSRCR1...
-     D                 PR
-     D  i_qPgm                             const likeds(qObj_t)
-     D  i_option                      1A   const
-     D  o_count                      10P 0
-     D  o_module                    512A
-      *
-     D DSPSRCR2...
-     D                 PR
-     D  i_qObj                       20A   const
-     D  i_objType                    10A   const
-     D  i_autoSelect                   N   const
-     D  o_qSrcFile                               likeds(qObj_t)
-     D  o_srcMbr                     10A
-     D  o_rc                         10A
-      *
-     D DSPSRCR3...
-     D                 PR
-     D  i_qSrvPgm                          const likeds(qObj_t)
-     D  i_option                      1A   const
-     D  o_count                      10P 0
-     D  o_module                    512A
-      *
-      /copy qdspsrc,fdqobj
-      *
-      /endif
+**free
+/if not defined(TYPES_H)
+/define TYPES_H
+
+dcl-pr DSPSRCR1;
+  i_qPgm   likeds(qObj_t) const;
+  i_option char(1) const;
+  o_count  packed(10);
+  o_module char(512);
+end-pr;
+
+dcl-pr DSPSRCR2;
+  i_qObj       char(20) const;
+  i_objType    char(10) const;
+  i_autoSelect ind const;
+  o_qSrcFile   likeds(qObj_t);
+  o_srcMbr     char(10);
+  o_rc         char(10);
+end-pr;
+
+dcl-pr DSPSRCR3;
+  i_qSrvPgm likeds(qObj_t) const;
+  i_option  char(1) const;
+  o_count   packed(10);
+  o_module  char(512);
+end-pr;
+
+/copy qdspsrc,fdqobj
+
+/endif
 ]]>  </copysrc>
 </mbr>
 <sendmsg  sendmsgid="CPF9897" sendmsgtype = "*STATUS   "><![CDATA[
@@ -3918,139 +3925,140 @@ mbrtext =  "Workstation specific structures and constants     "
 srcfile =  "QDSPSRC   "
 srclib  =  "selected  "
 srclen  =  "00112"
-srccssid=  "00273">
+srccssid=  "01141">
 <copysrc><![CDATA[
-      /if not defined(WORKSTN)
-      /define WORKSTN
-      *
-      *  Key pressed
-     d keyPressed_t    s              1a   based(pDummy)
-      *
-      *  Workstation information data structure
-     d workstn_infds_t...
-     d                 ds                  qualified               based(pDummy)
-     d  open                   9      9A
-     d  status                11     15S 0
-     d  AID                  369    369A
-      *
-      *  Command keys
-     d cKeyF1          c                   CONST(X'31')
-     d cKeyF2          c                   CONST(X'32')
-     d cKeyF3          c                   CONST(X'33')
-     d cKeyF4          c                   CONST(X'34')
-     d cKeyF5          c                   CONST(X'35')
-     d cKeyF6          c                   CONST(X'36')
-     d cKeyF7          c                   CONST(X'37')
-     d cKeyF8          c                   CONST(X'38')
-     d cKeyF9          c                   CONST(X'39')
-     d cKeyF10         c                   CONST(X'3A')
-     d cKeyF11         c                   CONST(X'3B')
-     d cKeyF12         c                   CONST(X'3C')
-     d cKeyF13         c                   CONST(X'B1')
-     d cKeyF14         c                   CONST(X'B2')
-     d cKeyF15         c                   CONST(X'B3')
-     d cKeyF16         c                   CONST(X'B4')
-     d cKeyF17         c                   CONST(X'B5')
-     d cKeyF18         c                   CONST(X'B6')
-     d cKeyF19         c                   CONST(X'B7')
-     d cKeyF20         c                   CONST(X'B8')
-     d cKeyF21         c                   CONST(X'B9')
-     d cKeyF22         c                   CONST(X'BA')
-     d cKeyF23         c                   CONST(X'BB')
-     d cKeyF24         c                   CONST(X'BC')
-      *
-     d cKeyClear       c                   CONST(X'BD')
-     d cKeyDelete      c                   CONST(X'BD')
-      *
-     d cKeyEnter       c                   CONST(X'F1')
-      *          Nicht definiert                   F2
-     d cKeyHelp        c                   CONST(X'F3')
-     d cKeyPageDown    c                   CONST(X'F4')
-     d cKeyPageUp      c                   CONST(X'F5')
-     d cKeyPrintScr    c                   CONST(X'F6')
-      *          Nicht definiert                   F7
-     d cKeyReset       c                   CONST(X'F8')
-      *
-     d cKeyLightPen    c                   CONST(X'3F')
-      *
-     d cSflFold        c                   CONST(*off)
-     d cSflDrop        c                   CONST(*on )
-      *
-      *  5250 color codes
-      *------------------------------------------------------*
-      * Green
-     d c5250_GRN       c                   CONST(X'20')
-      * Green/Reverse
-     d c5250_GRNR      c                   CONST(X'21')
-      * Green/Underscore
-     d c5250_GRNU      c                   CONST(X'24')
-      * Green/Underscore/Reverse
-     d c5250_GRNUR     c                   CONST(X'25')
-      *------------------------------------------------------*
-      * White
-     d c5250_WHT       c                   CONST(X'22')
-      * White/Reverse
-     d c5250_WHTR      c                   CONST(X'23')
-      * White/Underscore
-     d c5250_WHTU      c                   CONST(X'26')
-      *------------------------------------------------------*
-      * Red
-     d c5250_RED       c                   CONST(X'28')
-      * Red/Reverse
-     d c5250_REDR      c                   CONST(X'29')
-      * Red/Blink
-     d c5250_REDB      c                   CONST(X'2A')
-      * Red/Reverse/Blink
-     d c5250_REDRB     c                   CONST(X'2B')
-      * Red/Underscore
-     d c5250_REDU      c                   CONST(X'2C')
-      * Red/Underscore/Reverse
-     d c5250_REDUR     c                   CONST(X'2D')
-      * Red/Underscore/Blink
-     d c5250_REDUB     c                   CONST(X'2E')
-      *------------------------------------------------------*
-      * Turquoise/Column Separators
-     d c5250_TRQC      c                   CONST(X'30')
-      * Turquoise/Column Separators/Reverse
-     d c5250_TRQCR     c                   CONST(X'31')
-      * Turquoise/Underscore
-     d c5250_TRQU      c                   CONST(X'34')
-      * Turquoise/Underscore/Reverse
-     d c5250_TRQUR     c                   CONST(X'35')
-      *------------------------------------------------------*
-      * Yellow/Column Separators
-     d c5250_YLWC      c                   CONST(X'32')
-      * Yellow/Column Separators/Reverse
-     d c5250_YLWCR     c                   CONST(X'33')
-      * Yellow/Underscore
-     d c5250_YLWU      c                   CONST(X'36')
-      *------------------------------------------------------*
-      * Pink
-     d c5250_PNK       c                   CONST(X'38')
-      * Pink/Reverse
-     d c5250_PNKR      c                   CONST(X'39')
-      * Pink/Underscore
-     d c5250_PNKU      c                   CONST(X'3C')
-      * Pink/Underscore/Reverse
-     d c5250_PNKUR     c                   CONST(X'3D')
-      *------------------------------------------------------*
-      * Blue
-     d c5250_BLU       c                   CONST(X'3A')
-      * Blue/Reverse
-     d c5250_BLUR      c                   CONST(X'3B')
-      * Blue/Underscore
-     d c5250_BLUU      c                   CONST(X'3E')
-      *------------------------------------------------------*
-      * Nondisplay
-     d c5250_ND1       c                   CONST(X'27')
-      * Nondisplay
-     d c5250_ND2       c                   CONST(X'2F')
-      * Nondisplay
-     d c5250_ND3       c                   CONST(X'37')
-      * Nondisplay
-     d c5250_ND4       c                   CONST(X'3F')
-      *
-      /endif
+**free
+/if not defined(WORKSTN)
+/define workstn
+
+//  Key pressed
+dcl-s keyPressed_t char(1) template;
+
+//  Workstation information data structure
+dcl-ds workstn_infds_t qualified template;
+  dcl-subf open char(1) pos(9);
+  status        zoned(5) pos(11);
+  AID           char(1) pos(369);
+end-ds;
+
+//  Command keys
+dcl-c cKeyF1 X'31';
+dcl-c cKeyF2 X'32';
+dcl-c cKeyF3 X'33';
+dcl-c cKeyF4 X'34';
+dcl-c cKeyF5 X'35';
+dcl-c cKeyF6 X'36';
+dcl-c cKeyF7 X'37';
+dcl-c cKeyF8 X'38';
+dcl-c cKeyF9 X'39';
+dcl-c cKeyF10 X'3A';
+dcl-c cKeyF11 X'3B';
+dcl-c cKeyF12 X'3C';
+dcl-c cKeyF13 X'B1';
+dcl-c cKeyF14 X'B2';
+dcl-c cKeyF15 X'B3';
+dcl-c cKeyF16 X'B4';
+dcl-c cKeyF17 X'B5';
+dcl-c cKeyF18 X'B6';
+dcl-c cKeyF19 X'B7';
+dcl-c cKeyF20 X'B8';
+dcl-c cKeyF21 X'B9';
+dcl-c cKeyF22 X'BA';
+dcl-c cKeyF23 X'BB';
+dcl-c cKeyF24 X'BC';
+
+dcl-c cKeyClear X'BD';
+dcl-c cKeyDelete X'BD';
+
+dcl-c cKeyEnter X'F1';
+//          Nicht definiert                   F2
+dcl-c cKeyHelp X'F3';
+dcl-c cKeyPageDown X'F4';
+dcl-c cKeyPageUp X'F5';
+dcl-c cKeyPrintScr X'F6';
+//          Nicht definiert                   F7
+dcl-c cKeyReset X'F8';
+
+dcl-c cKeyLightPen X'3F';
+
+dcl-c cSflFold *off;
+dcl-c cSflDrop *on;
+
+//  5250 color codes
+//------------------------------------------------------*
+// Green
+dcl-c c5250_GRN X'20';
+// Green/Reverse
+dcl-c c5250_GRNR X'21';
+// Green/Underscore
+dcl-c c5250_GRNU X'24';
+// Green/Underscore/Reverse
+dcl-c c5250_GRNUR X'25';
+//------------------------------------------------------*
+// White
+dcl-c c5250_WHT X'22';
+// White/Reverse
+dcl-c c5250_WHTR X'23';
+// White/Underscore
+dcl-c c5250_WHTU X'26';
+//------------------------------------------------------*
+// Red
+dcl-c c5250_RED X'28';
+// Red/Reverse
+dcl-c c5250_REDR X'29';
+// Red/Blink
+dcl-c c5250_REDB X'2A';
+// Red/Reverse/Blink
+dcl-c c5250_REDRB X'2B';
+// Red/Underscore
+dcl-c c5250_REDU X'2C';
+// Red/Underscore/Reverse
+dcl-c c5250_REDUR X'2D';
+// Red/Underscore/Blink
+dcl-c c5250_REDUB X'2E';
+//------------------------------------------------------*
+// Turquoise/Column Separators
+dcl-c c5250_TRQC X'30';
+// Turquoise/Column Separators/Reverse
+dcl-c c5250_TRQCR X'31';
+// Turquoise/Underscore
+dcl-c c5250_TRQU X'34';
+// Turquoise/Underscore/Reverse
+dcl-c c5250_TRQUR X'35';
+//------------------------------------------------------*
+// Yellow/Column Separators
+dcl-c c5250_YLWC X'32';
+// Yellow/Column Separators/Reverse
+dcl-c c5250_YLWCR X'33';
+// Yellow/Underscore
+dcl-c c5250_YLWU X'36';
+//------------------------------------------------------*
+// Pink
+dcl-c c5250_PNK X'38';
+// Pink/Reverse
+dcl-c c5250_PNKR X'39';
+// Pink/Underscore
+dcl-c c5250_PNKU X'3C';
+// Pink/Underscore/Reverse
+dcl-c c5250_PNKUR X'3D';
+//------------------------------------------------------*
+// Blue
+dcl-c c5250_BLU X'3A';
+// Blue/Reverse
+dcl-c c5250_BLUR X'3B';
+// Blue/Underscore
+dcl-c c5250_BLUU X'3E';
+//------------------------------------------------------*
+// Nondisplay
+dcl-c c5250_ND1 X'27';
+// Nondisplay
+dcl-c c5250_ND2 X'2F';
+// Nondisplay
+dcl-c c5250_ND3 X'37';
+// Nondisplay
+dcl-c c5250_ND4 X'3F';
+
+/endif
 ]]>  </copysrc>
 </mbr>
 <qcmdexc condition="*NONE" release="*CURRENT" dltsplf="A_INSTALL"><![CDATA[
@@ -4058,7 +4066,7 @@ CRTBNDCL PGM(&tolib/A_INSTALL) SRCFILE(&tolib/QDSPSRC) SRCMBR(*PGM) DFTACTGRP(*N
 IEW(*LIST)
 ]]>  </qcmdexc>
 <qcmdexc condition="*NONE" release="*CURRENT" dltsplf="*NONE"><![CDATA[
-CALL PGM(&tolib/A_INSTALL) PARM('&TGTRLS' '&SRCFILE' '&tolib' '&LANG')
+CALL PGM(&tolib/A_INSTALL) PARM(('&TGTRLS') ('&SRCFILE') ('&tolib') ('&LANG'))
 ]]>  </qcmdexc>
 <qcmdexc condition="*NONE" release="*CURRENT" dltsplf="*NONE"><![CDATA[
 DLTPGM PGM(&tolib/A_INSTALL)

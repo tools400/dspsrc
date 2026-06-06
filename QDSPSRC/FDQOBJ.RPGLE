@@ -1,11 +1,13 @@
-      /if not defined(qObj_t    )
-      /define qObj_t
-      * ============================================================= *
-      *   Qualified object name                                       *
-      *===============================================================*
-      *
-     d qObj_t          ds                  qualified           based(pDummy)
-     d  name                         10a
-     d  lib                          10a
-      *
-      /endif
+**free
+/if not defined(qObj_t)
+/define qObj_t
+// ============================================================= *
+//   Qualified object name                                       *
+//===============================================================*
+
+dcl-ds qObj_t qualified template;
+  name char(10);
+  lib  char(10);
+end-ds;
+
+/endif
