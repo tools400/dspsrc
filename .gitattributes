@@ -1,0 +1,6 @@
+# The sources carry CRLF line endings. Keep them byte for byte,
+# otherwise core.autocrlf rewrites every line on commit.
+* -text
+
+# gmake in PASE cannot read a makefile with CRLF line endings.
+makefile text eol=lf

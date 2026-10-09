@@ -44,16 +44,28 @@
 // >>END-PRE-COMPILER<<                                                *
 //=====================================================================*
 ctl-opt nomain;
+/if defined(IFS_BUILD)
+/copy 'H_SPEC.RPGLE'
+/copy 'COPYRIGHT.RPGLE'
+/else
 /copy QDSPSRC,H_SPEC
 /copy QDSPSRC,COPYRIGHT
+/endif
 
 dcl-f DSPSRCD workstn(*ext) usage(*input: *output) usropn infds(workstn) sfile(PBSFL: recno)
   indds(wrkstn_flags);
 
+/if defined(IFS_BUILD)
+/copy 'TYPES_H.RPGLE'
+/copy 'WORKSTN.RPGLE'
+/copy 'QBNLSPGM.RPGLE'
+/copy 'QBNLPGMI.RPGLE'
+/else
 /copy qdspsrc,types_h
 /copy qdspsrc,workstn
 /copy qdspsrc,qbnlspgm
 /copy qdspsrc,qbnlpgmi
+/endif
 
 dcl-ds wrkstn_flags qualified;
   sflDsp    ind pos(80);

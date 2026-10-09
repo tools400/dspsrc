@@ -25,6 +25,10 @@ dcl-pr DSPSRCR3;
   o_module  char(512);
 end-pr;
 
+/if defined(IFS_BUILD)
+/copy 'FDQOBJ.RPGLE'
+/else
 /copy qdspsrc,fdqobj
+/endif
 
 /endif

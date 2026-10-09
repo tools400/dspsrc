@@ -65,19 +65,33 @@
 //                                                                     *
 //=====================================================================*
 ctl-opt nomain;
+/if defined(IFS_BUILD)
+/copy 'H_SPEC.RPGLE'
+/copy 'COPYRIGHT.RPGLE'
+/else
 /copy QDSPSRC,H_SPEC
 /copy QDSPSRC,COPYRIGHT
+/endif
 
 dcl-ds lstHdr likeds(genLstHdr_t) based(pLstHdr);
 dcl-ds spgl0100 likeds(SPGL0100_t) based(pSpgl0100);
 dcl-ds errCode likeds(errCode_t);
 
+/if defined(IFS_BUILD)
+/copy 'TYPES_H.RPGLE'
+/copy 'QUSRSPC.RPGLE'
+/copy 'GENLSTHDR.RPGLE'
+/copy 'FDERRCODE.RPGLE'
+/copy 'QBNLSPGM.RPGLE'
+/copy 'QCMDEXC.RPGLE'
+/else
 /copy qdspsrc,types_h
 /copy qdspsrc,qusrspc
 /copy qdspsrc,genlsthdr
 /copy qdspsrc,fderrcode
 /copy qdspsrc,qbnlspgm
 /copy qdspsrc,qcmdexc
+/endif
 
 dcl-ds qUsrSpc likeds(qObj_t);
 dcl-s numRecords int(10);
